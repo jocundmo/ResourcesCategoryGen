@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{858971A2-C141-476A-B177-54A3DBA9A98D}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RCG</RootNamespace>
+    <AssemblyName>RCG</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Office.Interop.Excel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>ref\Microsoft.Office.Interop.Excel.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Utility\Cache.cs" />
+    <Compile Include="Config\ColumnConfig.cs" />
+    <Compile Include="Config\FileTypeConfig.cs" />
+    <Compile Include="Config\FilterConfig.cs" />
+    <Compile Include="Config\FormatterConfig.cs" />
+    <Compile Include="Config\LocationConfig.cs" />
+    <Compile Include="Config\RuleApplicable.cs" />
+    <Compile Include="Config\SheetConfig.cs" />
+    <Compile Include="Utility\Constants.cs" />
+    <Compile Include="Utility\Evaluator.cs" />
+    <Compile Include="Utility\ExcelOperationWrapper.cs" />
+    <Compile Include="Filters\FilterFactory.cs" />
+    <Compile Include="Filters\IFilter.cs" />
+    <Compile Include="Filters\NamingMatchFilter.cs" />
+    <Compile Include="Formatters\BaseFormatter.cs" />
+    <Compile Include="Formatters\DateTimeCompareFormatter.cs" />
+    <Compile Include="Formatters\DuplicatedItemFormatter.cs" />
+    <Compile Include="Formatters\FormatterFactory.cs" />
+    <Compile Include="Formatters\IFormatter.cs" />
+    <Compile Include="Formatters\RefreshedItemFormatter.cs" />
+    <Compile Include="Formatters\NumberCompareFormatter.cs" />
+    <Compile Include="Formatters\AppendedItemFormatter.cs" />
+    <Compile Include="Formatters\UpdatedItemFormatter.cs" />
+    <Compile Include="RuleProcessors\DriverLabelRuleProcessor.cs" />
+    <Compile Include="RuleProcessors\FilesTypeRuleProcessor.cs" />
+    <Compile Include="RuleProcessors\ConditionalRuleProcessor.cs" />
+    <Compile Include="RuleProcessors\SimpleReplacementRuleProcess.cs" />
+    <Compile Include="RuleProcessors\ArithmeticRuleProcessor.cs" />
+    <Compile Include="RuleProcessors\AutoGenIntRuleProcessor.cs" />
+    <Compile Include="RuleProcessors\DefaultRuleProcessor.cs" />
+    <Compile Include="GenProcessor.cs" />
+    <Compile Include="Config\ConfigDoc.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RuleProcessors\RegularExpressionRuleProcessor.cs" />
+    <Compile Include="RuleProcessors\BaseRuleProcessor.cs" />
+    <Compile Include="RuleProcessors\RuleProcessorFactory.cs" />
+    <Compile Include="MessageLogger.cs" />
+    <Compile Include="Utility\VariableRefresher.cs" />
+    <Compile Include="Utility\Utility.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="Microsoft.Office.Core">
+      <Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>4</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="VBIDE">
+      <Guid>{0002E157-0000-0000-C000-000000000046}</Guid>
+      <VersionMajor>5</VersionMajor>
+      <VersionMinor>3</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Mappings.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
