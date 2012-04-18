@@ -8,7 +8,7 @@
         COLUMN_SubFolderCount = "_SubFolderCount_";
         COLUMN_FromFile = "_FromFile_";
 -->
-<Document templatePath="c:\template.xls" baselinePath="c:\mjm.xls" outputPath="c:\mjm{now}.xls">
+<Document templatePath="c:\template.xls" baselinePath="c:\mjm.xls" outputPath="c:\mjm.xls">
     <Sheets>
         <Sheet name="高清电影" enabled="true" mode="refresh" maxRowCount="600">
             <Formatters>
@@ -72,7 +72,7 @@
                 <Column name="最后更新时间" extractFrom="_LastModified_" ruleType="" timestamp="true" rule="" ></Column>
             </Columns>
         </Sheet>
-        <Sheet name="游戏" enabled="false" mode="refresh" maxRowCount="500">
+        <Sheet name="游戏" enabled="true" mode="refresh" maxRowCount="500">
             <Filters>
                 <Filter name="1" extractFrom="_Path_" ruleType="RegularExpressionFilter" rule="------"></Filter>
             </Filters>
@@ -86,7 +86,8 @@
             </Formatters>
             <Locations>
                 <Location enabled="false" path="G:\03.Games\电脑游戏"></Location>
-                <Location path="\\192.168.1.105\主机游戏"></Location>
+                <Location enabled="false" path="\\192.168.1.105\主机游戏"></Location>
+                <Location path="C:\New Folder2"></Location>
             </Locations>
             <Columns>
                 <Column Name="序号" extractFrom="_AutoIncrease_" ruleType="" rule=""></Column>
@@ -94,7 +95,7 @@
                 <Column name="中文名" extractFrom="全部" ruleType="RegularExpressionRuleProcessor" rule="pattern:=(?&lt;=^|\])[\u4e00-\u9fa5\w][^\[\]\\]*?(?=[\.\[]|$)"></Column>
                 <Column name="英文名" extractFrom="_FromFile_" ruleType="RegularExpressionRuleProcessor" rule="pattern:=英\s*?文\s*?名：([\w\W]*?)[\r\n]"></Column>
                 <Column name="位置" extractFrom="_Path_" ruleType="DriverLabelRuleProcessor" rule=""></Column>
-                <Column name="游戏分类" extractFrom="_Path_" ruleType="ConditionalRuleProcessor" rule="G:\03.Games\电脑游戏??电脑游戏::其他;\\192.168.1.105\主机游戏??主机游戏::其他"></Column>
+                <Column enabled="false" name="游戏分类" extractFrom="_Path_" ruleType="ConditionalRuleProcessor" rule="G:\03.Games\电脑游戏??电脑游戏::其他;\\192.168.1.105\主机游戏??主机游戏::其他"></Column>
                 <Column name="出品年代" extractFrom="_FromFile_" ruleType="RegularExpressionRuleProcessor" rule="pattern:=出品年代：([\w\W]*?)[\r\n]"></Column>
                 <Column name="游戏类型" extractFrom="_FromFile_" ruleType="RegularExpressionRuleProcessor" rule="pattern:=游戏类型：([\w\W]*?)[\r\n]"></Column>
                 <Column name="语言" extractFrom="_FromFile_" ruleType="RegularExpressionRuleProcessor" rule="pattern:=语\s*?言：([\w\W]*?)[\r\n]"></Column>
@@ -105,7 +106,7 @@
                 <Column name="附加信息" extractFrom="_FromFile_" ruleType="RegularExpressionRuleProcessor" rule="pattern:=附加信息：([\w\W]*?)[\r\n]"></Column>
                 <Column name="游戏必读" extractFrom="_FromFile_" ruleType="RegularExpressionRuleProcessor" rule="pattern:=游戏必读：([\w\W]*?)[\r\n]"></Column>
                 <Column name="详细描述" extractFrom="_FromFile_" ruleType="RegularExpressionRuleProcessor" rule="pattern:=详细描述：([\w\W]*?)->ed"></Column>
-                <Column name="大小(MB)" extractFrom="_Size_" ruleType="ArithmeticRuleProcessor" rule="exp:={s}/1024/1024;format:=###0 >"></Column>
+                <Column enabled="false" name="大小(MB)" extractFrom="_Size_" ruleType="ArithmeticRuleProcessor" rule="exp:={s}/1024/1024;format:=###0 >"></Column>
                 <Column name="最后更新时间" extractFrom="_LastModified_" ruleType="" timestamp="true" rule="" ></Column>
             </Columns>
         </Sheet>

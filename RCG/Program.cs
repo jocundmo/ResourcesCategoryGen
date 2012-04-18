@@ -92,9 +92,11 @@ namespace RCG
                 logger.LogMessage("Generating metadata...");
                 gp.GenerateMetadata();
                 logger.LogMessage("Reading excel...");
-                gp.ReadExcel();
+                gp.OutputTemporaryFiles("rcg_temp.xml");
+                gp.ReadPreviousMetadata();
                 logger.LogMessage("Processing metadata table...");
                 gp.ProcessMetadataTable();
+                gp.OutputTemporaryFiles("rcg_post_temp.xml");
                 logger.LogMessage("Generating excel...");
                 gp.RefreshExcel();
                 logger.LogMessage("Done successfully!!!");

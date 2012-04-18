@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Data;
+using System.Xml.Serialization;
+using System.Xml.Schema;
 
 namespace RCG
 {
-    public abstract class BaseFormatter : IFormatter
+    public abstract class BaseFormatter : IFormatter, IXmlSerializable
     {
         public GenProcessor Engine { get; protected set; }
         protected string _formatString = string.Empty;
@@ -112,5 +114,20 @@ namespace RCG
             return string.Format("Type: {0}, FormatType: {1}, FormatString: {2}", this.GetType().FullName, this.FormaterType.ToString(), this.FormatString);
         }
         #endregion
+
+        public System.Xml.Schema.XmlSchema GetSchema()
+        {
+            return new XmlSchema();
+        }
+
+        public void ReadXml(System.Xml.XmlReader reader)
+        {
+            this._formatString = reader.Value;
+        }
+
+        public void WriteXml(System.Xml.XmlWriter writer)
+        {
+            writer.WriteValue(this._formatString);
+        }
     }
 }
