@@ -10,7 +10,7 @@
 -->
 <Document templatePath="c:\template.xls" baselinePath="c:\mjm.xls" outputPath="c:\mjm.xls">
     <Sheets>
-        <Sheet name="高清电影" enabled="true" mode="refresh" maxRowCount="600">
+        <Sheet name="高清电影" enabled="true" mode="append" maxRowCount="600">
             <Formatters>
                 <Formatter name="append_formatter" extractFrom="" ruleType="AppendedItemFormatter" rule="" formatString="back-color:red;font-bold;font-italic"></Formatter>
                 <Formatter name="update_formatter" extractFrom="" ruleType="UpdatedItemFormatter" rule="" formatString="back-color:darkblue;fore-color:yellow"></Formatter>

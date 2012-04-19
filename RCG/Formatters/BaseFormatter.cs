@@ -117,7 +117,7 @@ namespace RCG
 
         public System.Xml.Schema.XmlSchema GetSchema()
         {
-            return new XmlSchema();
+            return null;
         }
 
         public void ReadXml(System.Xml.XmlReader reader)

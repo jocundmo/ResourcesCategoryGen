@@ -237,12 +237,13 @@ namespace RCG
 
         public void OutputTemporaryFiles(string filename)
         {
+            _metadataSet.WriteXmlSchema(filename + ".xsd");
             _metadataSet.WriteXml(filename);
         }
         /// <summary>
         /// Reads the original existing excel to determine what already exists.
         /// </summary>
-        public void ReadPreviousMetadata()
+        public void ReadPreviousMetadata(string filename)
         {
             //_excel = new Excel.Application();
             //// Inits the active sheet.
@@ -353,7 +354,31 @@ namespace RCG
 
             //    _excelSet.Tables.Add(excelTable);
             //}
-            _excelSet.ReadXml("rcg_post_temp.xml");
+            //XmlDocument xdoc = new XmlDocument();
+            //xdoc.Load("rcg_post_temp.xml");
+            //StreamReader sr = new StreamReader("rcg_post_temp.xml");
+            if (!File.Exists(filename + ".xsd"))
+            {
+                foreach (SheetConfig sheetConfig in _config.Sheets)
+                {
+                    if (!sheetConfig.Enabled)
+                        continue;
+
+                    DataTable metadataTable = Utility.FindMetadataTable(_metadataSet, sheetConfig.Name);
+                    SetupOutputTableSchema(metadataTable, sheetConfig);
+                }
+                _metadataSet.WriteXmlSchema(filename + ".xsd");
+                _metadataSet.Clear();
+            }
+            if (File.Exists(filename + ".xsd"))
+            {
+                _excelSet.ReadXmlSchema(filename + ".xsd");
+            }
+            if (File.Exists(filename))
+            {
+                _excelSet.ReadXml(filename);
+            }
+            
         }
 
         private static void SetupOutputTableSchema(DataTable metadataTable, SheetConfig sheetConfig)
@@ -478,9 +503,8 @@ namespace RCG
             }
         }
 
-        public void RefreshExcel()
+        private void InitExcelActiveSheet()
         {
-            _excel = new Excel.Application();
             // Inits the active sheet.
             if (!string.IsNullOrEmpty(_config.BaselinePath.Trim()) &&
                 File.Exists(_config.BaselinePath.Trim()))
@@ -500,6 +524,11 @@ namespace RCG
                 else
                     _excel.Application.Workbooks.Add(true);
             }
+        }
+        public void RefreshExcel()
+        {
+            _excel = new Excel.Application();
+            InitExcelActiveSheet();
             try
             {
                 foreach (DataTable table in _metadataSet.Tables)
