@@ -357,7 +357,7 @@ namespace RCG
             //XmlDocument xdoc = new XmlDocument();
             //xdoc.Load("rcg_post_temp.xml");
             //StreamReader sr = new StreamReader("rcg_post_temp.xml");
-            if (!File.Exists(filename + ".xsd"))
+            if (!File.Exists(filename + ".xsd")) // If the previous schema did not exist, we use the meatadata to generate.
             {
                 foreach (SheetConfig sheetConfig in _config.Sheets)
                 {
@@ -368,12 +368,13 @@ namespace RCG
                     SetupOutputTableSchema(metadataTable, sheetConfig);
                 }
                 _metadataSet.WriteXmlSchema(filename + ".xsd");
-                _metadataSet.Clear();
+                //_metadataSet.Clear();
             }
             if (File.Exists(filename + ".xsd"))
             {
                 _excelSet.ReadXmlSchema(filename + ".xsd");
             }
+            // TODO: Current issue is, I could not read the use the serialize and deserialise to the xml correctly.
             if (File.Exists(filename))
             {
                 _excelSet.ReadXml(filename);
@@ -385,7 +386,7 @@ namespace RCG
         {
             foreach (ColumnConfig column in sheetConfig.Columns)
             {
-                if (!column.Enabled)
+                if (!column.Enabled || metadataTable.Columns.Contains(column.DisplayName))
                     continue;
                 metadataTable.Columns.Add(new DataColumn(column.DisplayName));
             }
@@ -418,8 +419,10 @@ namespace RCG
                         // Get metadata content.
                         string originalContent = string.Empty;
                         ColumnConfig columnConfig = FindColumnConfig(_config, metadataTable.TableName, dcOutput.ColumnName);
+                        
                         CurrentColumnConfig = columnConfig;
 
+                        // The column with Enabled=false couldn't even be added. So we no need write the code to skip the disabled column.
                         if (!Utility.IsValidExtractFrom(columnConfig.ExtractFrom.Trim()))
                             continue;
 
