@@ -138,7 +138,7 @@ namespace RCG
                 dt.Columns.Add(dcFilterFlag);
                 DataColumn dcRowMode = new DataColumn(Constants.COLUMN_RowMode);
                 dt.Columns.Add(dcRowMode);
-                DataColumn dcFormatString = new DataColumn(Constants.COLUMN_Formatter, typeof(IFormatter));
+                DataColumn dcFormatString = new DataColumn(Constants.COLUMN_Formatter);
                 dt.Columns.Add(dcFormatString);
                 DataColumn dcTag = new DataColumn(Constants.COLUMN_Tag);
                 dt.Columns.Add(dcTag);
@@ -494,11 +494,13 @@ namespace RCG
                     {
                         if (!formatterConfig.Enabled)
                             continue;
-
+                        //We should instanc the formatter when use it, not here.
                         IFormatter formatter = FormatterFactory.GetFormatter(formatterConfig.RuleType, formatterConfig.Rule, formatterConfig.FormatString, this);
+                        string formatterToken = formatterConfig.Token;
+                        // Same issue with above, we should put off to decide when to apply formatter.
                         if (formatter.Match(metadataRow, formatterConfig))
                         {
-                            metadataRow[Constants.COLUMN_Formatter] = formatter;
+                            metadataRow[Constants.COLUMN_Formatter] = formatterToken;
                         }
                     }
                     #endregion
@@ -785,9 +787,15 @@ namespace RCG
             int realExcelRowIndex = rowIndexToWrite;
 
             #region Apply Formatter
-            IFormatter formatter = row[Constants.COLUMN_Formatter] as IFormatter;
-            if (formatter != null)
-                formatter.Execute(realExcelRowIndex);
+            string formatterToken = row[Constants.COLUMN_Formatter] as string;
+            if (!string.IsNullOrEmpty(formatterToken))
+            {
+                //IFormatter formatter = row[Constants.COLUMN_Formatter] as IFormatter;
+                string[] formatterTokens = formatterToken.Split(new string[] { FormatterConfig.TokenSplitter }, StringSplitOptions.RemoveEmptyEntries);
+                IFormatter formatter = FormatterFactory.GetFormatter(formatterTokens[0], formatterTokens[1], formatterTokens[2], this);
+                if (formatter != null)
+                    formatter.Execute(realExcelRowIndex);
+            }
             #endregion
 
             int excelColIndex = 0;
