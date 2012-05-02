@@ -155,7 +155,7 @@ namespace RCG
                     catch (IOException ex)
                     {
                         if (OnHandlableException != null)
-                            OnHandlableException(this, new HandlableExceptionEventArgs(ex, string.Empty));
+                            OnHandlableException(this, new HandlableExceptionEventArgs(ex, string.Format("Location {0} does not exist...", locationConfig.Path)));
                     }
                 }
 
@@ -552,9 +552,22 @@ namespace RCG
         {
             _excel = new Excel.Application();
             InitExcelActiveSheet();
+            // Combine the _metadataSet & _excelSet ==>
+            DataSet datasetToExecute = new DataSet();
+            foreach (DataTable table in _excelSet.Tables)
+            {
+                if (!datasetToExecute.Tables.Contains(table.TableName))
+                    datasetToExecute.Tables.Add(table.Copy());
+            }
+            foreach (DataTable table in _metadataSet.Tables)
+            {
+                if (!datasetToExecute.Tables.Contains(table.TableName))
+                    datasetToExecute.Tables.Add(table.Copy());
+            }
+            // <==
             try
             {
-                foreach (DataTable table in _metadataSet.Tables)
+                foreach (DataTable table in datasetToExecute.Tables)
                 {
                     SheetConfig sheetConfig = FindSheetConfig(_config, table.TableName);
 
