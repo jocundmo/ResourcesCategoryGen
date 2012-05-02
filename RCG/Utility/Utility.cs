@@ -124,20 +124,27 @@ namespace RCG
             return valid;
         }
 
-        public static bool IsColumnToOutput(string path, SheetConfig currentSheetConfig)
+        public static bool IsColumnToOutput(DataRow row,  int currentColumnIndex)
         {
-            ColumnConfig ccToFound = null;
-            foreach (ColumnConfig cc in currentSheetConfig.Columns)
+            string[] columnsCouldOutput = ((string)row[Constants.COLUMN_OutputColumnIndex]).Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string s in columnsCouldOutput)
             {
-                if (cc.Enabled && cc.Name == path)
-                {
-                    ccToFound = cc;
-                    break;
-                }
+                if (s.Trim() == currentColumnIndex.ToString())
+                    return true;
             }
-            if (ccToFound == null)
-                throw new Exception(string.Format("Column {0} not found or not enabled", path));
-            return ccToFound.Output;
+            return false;
+            //ColumnConfig ccToFound = null;
+            //foreach (ColumnConfig cc in currentSheetConfig.Columns)
+            //{
+            //    if (cc.Enabled && cc.Name == path)
+            //    {
+            //        ccToFound = cc;
+            //        break;
+            //    }
+            //}
+            //if (ccToFound == null)
+            //    throw new Exception(string.Format("Column {0} not found or not enabled", path));
+            //return ccToFound.Output;
         }
 
         public static string GetDataRowContent(DataRow row, string extractFrom)

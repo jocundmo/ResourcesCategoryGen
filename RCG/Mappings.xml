@@ -16,7 +16,7 @@
                 <Formatter name="update_formatter" extractFrom="" ruleType="UpdatedItemFormatter" rule="" formatString="back-color:darkblue;fore-color:yellow"></Formatter>
                 <Formatter enabled="false" name="refresh_formatter" extractFrom="" ruleType="RefreshedItemFormatter" rule="" formatString="fore-color:red"></Formatter>
                 <Formatter name="duplicated_formatter" extractFrom="中文名" ruleType="DuplicatedItemFormatter" rule="" formatString="back-color:green;fore-color:pink"></Formatter>
-                <Formatter name="formatter1" extractFrom="大小(MB)" ruleType="NumberCompareFormatter" rule="less_than:180" formatString="fore-color:green;back-color:red"></Formatter>
+                <Formatter enabled="false" name="formatter1" extractFrom="大小(MB)" ruleType="NumberCompareFormatter" rule="less_than:180" formatString="fore-color:green;back-color:red"></Formatter>
             </Formatters>
             <Filters>
                 <Filter name="1" extractFrom="_Path_" ruleType="RegularExpressionFilter" rule="======"></Filter>
@@ -24,8 +24,8 @@
             <Locations>
                 <Location enabled="false" path="\\192.168.1.115\高清电影02" include="Folder"></Location>
                 <Location enabled="false" path="\\192.168.1.105\高清电影01" include="*.mp3"></Location>
-                <Location enabled="true" path="\\192.168.2.161\高清电影1024_03"></Location>
-                <Location enabled="false" path="C:\New Folder" include="folder"></Location>
+                <Location enabled="false" path="\\192.168.2.161\高清电影1024_03"></Location>
+                <Location enabled="true" path="C:\New Folder" include="folder"></Location>
             </Locations>
             <Columns>
                 <Column name="序号"   extractFrom="_AutoIncrease_" ruleType="" rule="" ></Column>
@@ -72,9 +72,9 @@
                 <Column name="最后更新时间" extractFrom="_LastModified_" ruleType="" timestamp="true" rule="" ></Column>
             </Columns>
         </Sheet>
-        <Sheet name="游戏" enabled="true" mode="refresh" maxRowCount="500">
+        <Sheet name="游戏" enabled="false" mode="refresh" maxRowCount="500">
             <Filters>
-                <Filter name="1" extractFrom="_Path_" ruleType="RegularExpressionFilter" rule="------"></Filter>
+                <Filter name="1" extractFrom="_Path_" ruleType="RegularExpressionFilter" rule="-*-$"></Filter>
             </Filters>
             <Formatters>
                 <Formatter name="append_formatter" extractFrom="" ruleType="AppendedItemFormatter" rule="" formatString="back-color:red;font-bold;font-italic"></Formatter>

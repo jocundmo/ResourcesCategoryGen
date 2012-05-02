@@ -67,6 +67,7 @@ namespace RCG
                     return sheetConfig;
                 }
             }
+            //return null;
             throw new Exception(string.Format("Sheet config {0} not recognized...", sheetName));
         }
 
@@ -82,6 +83,7 @@ namespace RCG
                     return columnConfig;
                 }
             }
+            //return null;
             throw new Exception(string.Format("Column config {0} of Sheet {1} is not recognized...", columnName, sheetName));
         }
 
@@ -116,6 +118,8 @@ namespace RCG
                 CurrentSheetConfig = sheetConfig;
 
                 DataTable dt = new DataTable(sheetConfig.Name);
+                // Use the "Prefix" to save the Mode.
+                dt.Prefix = sheetConfig.Mode;
 
                 // Generate the original Columns.
                 DataColumn dcPath = new DataColumn(Constants.COLUMN_Path);
@@ -142,6 +146,12 @@ namespace RCG
                 dt.Columns.Add(dcFormatString);
                 DataColumn dcTag = new DataColumn(Constants.COLUMN_Tag);
                 dt.Columns.Add(dcTag);
+                DataColumn dcPrimaryColumnIndex = new DataColumn(Constants.COLUMN_PrimaryColumnIndex, typeof(int));
+                dt.Columns.Add(dcPrimaryColumnIndex);
+                DataColumn dcTimestampColumnIndex = new DataColumn(Constants.COLUMN_TimestampColumnIndex, typeof(int));
+                dt.Columns.Add(dcTimestampColumnIndex);
+                DataColumn dcOutputColumnIndex = new DataColumn(Constants.COLUMN_OutputColumnIndex, typeof(string));
+                dt.Columns.Add(dcOutputColumnIndex);
 
                 // Read metadata.
                 foreach (LocationConfig locationConfig in sheetConfig.Locations)
@@ -254,6 +264,7 @@ namespace RCG
         public void OutputTemporaryFiles(string filename)
         {
             DataSet datasetToExecute = CombineMetadataExcelDataset();
+            //DataSet datasetToExecute = _metadataSet;
             datasetToExecute.WriteXmlSchema(filename + ".xsd");
             datasetToExecute.WriteXml(filename);
         }
@@ -429,9 +440,10 @@ namespace RCG
                     #region Process metadata
                     if (OnProcessingMetadata != null)
                         OnProcessingMetadata(this, new DataRowEventArgs(metadataRow, Constants.COLUMN_Path));
-
+                    int columnIndex = -1;
                     foreach (DataColumn dcOutput in metadataTable.Columns)
                     {
+                        columnIndex++;
                         if (Utility.IsExtractFromMetadata(dcOutput.ColumnName))
                             continue;
                         // Get metadata content.
@@ -451,8 +463,21 @@ namespace RCG
                         string procssedContent = rp.Process(originalContent);
 
                         metadataRow[dcOutput] = procssedContent;
+
+                        #region Set the special columns index
+                        if (columnConfig.Primary)
+                            metadataRow[Constants.COLUMN_PrimaryColumnIndex] = columnIndex;
+                        if (columnConfig.Timestamp)
+                            metadataRow[Constants.COLUMN_TimestampColumnIndex] = columnIndex;
+                        if (columnConfig.Output)
+                            metadataRow[Constants.COLUMN_OutputColumnIndex] += string.Format("{0},", columnIndex);
+
+                        #endregion
+
                     }
                     #endregion
+
+
 
                     #region Set row mode
                     if (OnSettingRowMode != null)
@@ -572,36 +597,47 @@ namespace RCG
             InitExcelActiveSheet();
             // Combine the _metadataSet & _excelSet for the case first deinfed in mappings.xml then be disabled ==>
             DataSet datasetToExecute = CombineMetadataExcelDataset();
+            //DataSet datasetToExecute = _metadataSet;
             // <==
             try
             {
                 foreach (DataTable table in datasetToExecute.Tables)
                 {
-                    SheetConfig sheetConfig = FindSheetConfig(_config, table.TableName);
+                    //SheetConfig sheetConfig = FindSheetConfig(_config, table.TableName);
 
-                    CurrentActiveExcelSheet = ExcelOperationWrapper.FindExcelActiveSheet(_excel, sheetConfig.Name);
+                    CurrentActiveExcelSheet = ExcelOperationWrapper.FindExcelActiveSheet(_excel, table.TableName);
 
                     // Generates header
                     int excelColIndex = 0;
+                    int loopColIndex = -1;
                     foreach (DataColumn col in table.Columns)
                     {
+                        loopColIndex++;
                         if (Utility.IsExtractFromMetadata(col.ColumnName))
                             continue;
-                        if (!Utility.IsColumnToOutput(col.ColumnName, CurrentSheetConfig))
+                        // If sheetConfig equals null, means the sheet is already there and no need re-generate column header.
+                        //if (sheetConfig == null || !Utility.IsColumnToOutput(col.ColumnName, sheetConfig))
+                        //    continue;
+                        if (!Utility.IsColumnToOutput(table.Rows[0], loopColIndex))
                             continue;
 
                         excelColIndex++;
                         CurrentActiveExcelSheet.Cells[Constants.HEADER_ROW_INDEX, excelColIndex] = col.ColumnName;
                     }
-
-                    // Clears the excel sheet while mode is "refersh"
-                    if (sheetConfig.Mode == Constants.SHEET_MODE_Refresh)
-                        ExcelOperationWrapper.ClearExcelSheetWithoutHeader(CurrentActiveExcelSheet, GetAvailableExcelRowCountWithoutHeader());
-
+                    
+                    // Clears the excel sheet while mode is "refersh" - Prefix saved "Mode" value.
+                    if (table.Prefix == Constants.SHEET_MODE_Refresh && _excelSet.Tables.Contains(table.TableName))
+                    {
+                        ExcelOperationWrapper.ClearExcelSheetWithoutHeader(CurrentActiveExcelSheet, GetAvailableExcelRowCountWithoutHeader(table.TableName));
+                    }
                     // Generates rows
                     int rowIndexToWrite = 2;
-                    int existedExcelRowsCount = GetAvailableExcelRowCountWithoutHeader();
-                    ExcelOperationWrapper.ClearExcelSheetFormatWithoutHeader(CurrentActiveExcelSheet, existedExcelRowsCount);
+                    int existedExcelRowsCount = 0;
+                    if (_excelSet.Tables.Contains(table.TableName))
+                    {
+                        existedExcelRowsCount = GetAvailableExcelRowCountWithoutHeader(table.TableName);
+                        ExcelOperationWrapper.ClearExcelSheetFormatWithoutHeader(CurrentActiveExcelSheet, existedExcelRowsCount);
+                    }
                     //Collection<DataRow> updateRowCollection = new Collection<DataRow>();
                     //Dictionary<int, DataRow> updateRowDict = new Dictionary<int, DataRow>();
                     foreach (DataRow row in table.Rows)
@@ -677,32 +713,35 @@ namespace RCG
         // 3=Exists and Expires.
         internal DataRowExistsOrExpires IsDataRowExistsOrExpires(DataRow dr)
         {
-            int primaryColumnIndexOfDatatable = GetPrimaryDataColumnIndex();
-            DataRowExistsOrExpires dree = Cache.Instance.GetDataRowExistsOrExpiresDictCacheValue(CurrentSheetConfig.Name, (string)dr[primaryColumnIndexOfDatatable]);
+            if (!_excelSet.Tables.Contains(dr.Table.TableName))
+                return DataRowExistsOrExpires.NotExists;
+
+            int primaryColumnIndexOfDatatable = GetPrimaryDataColumnIndex(dr);
+            DataRowExistsOrExpires dree = Cache.Instance.GetDataRowExistsOrExpiresDictCacheValue(dr.Table.TableName, (string)dr[primaryColumnIndexOfDatatable]);
             if (dree == DataRowExistsOrExpires.UnKnown)
             {
                 int rowIndexOfExcel = GetExcelRowIndex(dr);
                 if (rowIndexOfExcel == Constants.INT_NOT_FOUND_INDEX)
                 {
-                    Cache.Instance.SetDataRowExistsOrExpiresDictCacheValue(CurrentSheetConfig.Name, (string)dr[primaryColumnIndexOfDatatable], DataRowExistsOrExpires.NotExists);
+                    Cache.Instance.SetDataRowExistsOrExpiresDictCacheValue(dr.Table.TableName, (string)dr[primaryColumnIndexOfDatatable], DataRowExistsOrExpires.NotExists);
                     return DataRowExistsOrExpires.NotExists; // Not Exists
                 }
 
-                int timestampColumnIndexOfExcel = GetTimestampExcelColumnIndex();
-                int timestampColumnIndexOfDatatable = GetTimestampDataColumnIndex();
+                int timestampColumnIndexOfExcel = GetTimestampExcelColumnIndex(dr);
+                int timestampColumnIndexOfDatatable = GetTimestampDataColumnIndex(dr);
 
-                DateTime dtOfExcel = DateTime.Parse((string)Utility.FindExcelTable(_excelSet, CurrentSheetConfig.Name).Rows[rowIndexOfExcel][timestampColumnIndexOfExcel]);
+                DateTime dtOfExcel = DateTime.Parse((string)Utility.FindExcelTable(_excelSet, dr.Table.TableName).Rows[rowIndexOfExcel][timestampColumnIndexOfExcel]);
                 DateTime dtOfDatatable = DateTime.Parse(dr[timestampColumnIndexOfDatatable].ToString());
 
                 bool isExpires = dtOfDatatable > dtOfExcel;
                 if (isExpires)
                 {
-                    Cache.Instance.SetDataRowExistsOrExpiresDictCacheValue(CurrentSheetConfig.Name, (string)dr[primaryColumnIndexOfDatatable], DataRowExistsOrExpires.ExistsAndExpires);
+                    Cache.Instance.SetDataRowExistsOrExpiresDictCacheValue(dr.Table.TableName, (string)dr[primaryColumnIndexOfDatatable], DataRowExistsOrExpires.ExistsAndExpires);
                     return DataRowExistsOrExpires.ExistsAndExpires; // Exists and Expires
                 }
                 else
                 {
-                    Cache.Instance.SetDataRowExistsOrExpiresDictCacheValue(CurrentSheetConfig.Name, (string)dr[primaryColumnIndexOfDatatable], DataRowExistsOrExpires.ExistsButNotExpires);
+                    Cache.Instance.SetDataRowExistsOrExpiresDictCacheValue(dr.Table.TableName, (string)dr[primaryColumnIndexOfDatatable], DataRowExistsOrExpires.ExistsButNotExpires);
                     return DataRowExistsOrExpires.ExistsButNotExpires; // Exists but Not Expires
                 }
             }
@@ -711,8 +750,8 @@ namespace RCG
 
         internal int GetExcelRowIndex(DataRow dr)
         {
-            int primaryColumnIndexOfDatatable = GetPrimaryDataColumnIndex();
-            int primaryColumnIndexOfExcel = GetPrimaryExcelColumnIndex();
+            int primaryColumnIndexOfDatatable = GetPrimaryDataColumnIndex(dr);
+            int primaryColumnIndexOfExcel = GetPrimaryExcelColumnIndex(dr);
 
             int rowIndex = 0;
             foreach (DataRow row in Utility.FindExcelTable(_excelSet, CurrentSheetConfig.Name).Rows)
@@ -724,115 +763,139 @@ namespace RCG
             return Constants.INT_NOT_FOUND_INDEX;
         }
 
-        internal int GetTimestampDataColumnIndex()
+        internal int GetTimestampDataColumnIndex(DataRow dr)
         {
-            int timestampDataColumnIndex = Cache.Instance.GetCacheValue<int>(CurrentSheetConfig.Name, Cache.Timestamp_DataColumn_Index);
-            if (timestampDataColumnIndex <= 0)
-            {
-                foreach (ColumnConfig columnConfig in CurrentSheetConfig.Columns)
-                {
-                    if (!columnConfig.Timestamp)
-                        continue;
-                    DataTable table = Utility.FindMetadataTable(_metadataSet, CurrentSheetConfig.Name);
-                    int index = 0;
-                    foreach (DataColumn dc in table.Columns)
-                    {
-                        if (dc.ColumnName == columnConfig.DisplayName)
-                        {
-                            Cache.Instance.SetCacheValue<int>(CurrentSheetConfig.Name, Cache.Timestamp_DataColumn_Index, index);
-                            return index;
-                        }
-                        index++;
-                    }
-                }
-            }
-            return timestampDataColumnIndex;
+            return (int)dr[Constants.COLUMN_TimestampColumnIndex];
+            //int timestampDataColumnIndex = Cache.Instance.GetCacheValue<int>(dr.Table.tableName, Cache.Timestamp_DataColumn_Index);
+            //if (timestampDataColumnIndex <= 0)
+            //{
+            //    foreach (ColumnConfig columnConfig in CurrentSheetConfig.Columns)
+            //    {
+            //        if (!columnConfig.Timestamp)
+            //            continue;
+            //        DataTable table = Utility.FindMetadataTable(_metadataSet, CurrentSheetConfig.Name);
+            //        int index = 0;
+            //        foreach (DataColumn dc in table.Columns)
+            //        {
+            //            if (dc.ColumnName == columnConfig.DisplayName)
+            //            {
+            //                Cache.Instance.SetCacheValue<int>(CurrentSheetConfig.Name, Cache.Timestamp_DataColumn_Index, index);
+            //                return index;
+            //            }
+            //            index++;
+            //        }
+            //    }
+            //}
+            //return timestampDataColumnIndex;
         }
 
-        internal int GetPrimaryDataColumnIndex()
+        internal int GetPrimaryDataColumnIndex(DataRow dr)
         {
-            int primaryDataColumnIndex = Cache.Instance.GetCacheValue<int>(CurrentSheetConfig.Name, Cache.Primary_DataColumn_Index);
-            if (primaryDataColumnIndex <= 0)
-            {
-                foreach (ColumnConfig columnConfig in CurrentSheetConfig.Columns)
-                {
-                    if (!columnConfig.Primary)
-                        continue;
-                    DataTable table = Utility.FindMetadataTable(_metadataSet, CurrentSheetConfig.Name);
-                    int index = 0;
-                    foreach (DataColumn dc in table.Columns)
-                    {
-                        if (dc.ColumnName == columnConfig.DisplayName)
-                        {
-                            Cache.Instance.SetCacheValue<int>(CurrentSheetConfig.Name, Cache.Primary_DataColumn_Index, index);
-                            return index;
-                        }
-                        index++;
-                    }
-                }
-            }
-            return primaryDataColumnIndex;
+            return (int)dr[Constants.COLUMN_PrimaryColumnIndex];
+            //int primaryDataColumnIndex = Cache.Instance.GetCacheValue<int>(CurrentSheetConfig.Name, Cache.Primary_DataColumn_Index);
+            //if (primaryDataColumnIndex <= 0)
+            //{
+            //    foreach (ColumnConfig columnConfig in CurrentSheetConfig.Columns)
+            //    {
+            //        if (!columnConfig.Primary)
+            //            continue;
+            //        DataTable table = Utility.FindMetadataTable(_metadataSet, CurrentSheetConfig.Name);
+            //        int index = 0;
+            //        foreach (DataColumn dc in table.Columns)
+            //        {
+            //            if (dc.ColumnName == columnConfig.DisplayName)
+            //            {
+            //                Cache.Instance.SetCacheValue<int>(CurrentSheetConfig.Name, Cache.Primary_DataColumn_Index, index);
+            //                return index;
+            //            }
+            //            index++;
+            //        }
+            //    }
+            //}
+            //return primaryDataColumnIndex;
         }
 
-        internal int GetTimestampExcelColumnIndex()
+        internal int GetTimestampExcelColumnIndex(DataRow dr)
         {
-            int timestampExcelColumnIndex = Cache.Instance.GetCacheValue<int>(CurrentSheetConfig.Name, Cache.Timestamp_ExcelColumn_Index);
+            int timestampExcelColumnIndex = Cache.Instance.GetCacheValue<int>(dr.Table.TableName, Cache.Timestamp_ExcelColumn_Index);
             if (timestampExcelColumnIndex <= 0)
             {
-                foreach (ColumnConfig columnConfig in CurrentSheetConfig.Columns)
+                string timestampColumnName = dr.Table.Columns[(int)dr[Constants.COLUMN_TimestampColumnIndex]].ColumnName;
+                int excelColIndex = 0;
+                foreach (DataColumn dc in Utility.FindExcelTable(_excelSet, CurrentSheetConfig.Name).Columns)
                 {
-                    if (!columnConfig.Timestamp)
-                        continue;
-
-                    int excelColIndex = 0;
-                    foreach (DataColumn dc in Utility.FindExcelTable(_excelSet, CurrentSheetConfig.Name).Columns)
+                    if (dc.ColumnName == timestampColumnName)
                     {
-                        if (dc.ColumnName == columnConfig.DisplayName)
-                        {
-                            Cache.Instance.SetCacheValue<int>(CurrentSheetConfig.Name, Cache.Timestamp_ExcelColumn_Index, excelColIndex);
-                            return excelColIndex;
-                        }
-                        excelColIndex++;
+                        Cache.Instance.SetCacheValue<int>(CurrentSheetConfig.Name, Cache.Timestamp_ExcelColumn_Index, excelColIndex);
+                        return excelColIndex;
                     }
+                    excelColIndex++;
                 }
+                //foreach (ColumnConfig columnConfig in CurrentSheetConfig.Columns)
+                //{
+                //    if (!columnConfig.Timestamp)
+                //        continue;
+
+                //    int excelColIndex = 0;
+                //    foreach (DataColumn dc in Utility.FindExcelTable(_excelSet, CurrentSheetConfig.Name).Columns)
+                //    {
+                //        if (dc.ColumnName == columnConfig.DisplayName)
+                //        {
+                //            Cache.Instance.SetCacheValue<int>(CurrentSheetConfig.Name, Cache.Timestamp_ExcelColumn_Index, excelColIndex);
+                //            return excelColIndex;
+                //        }
+                //        excelColIndex++;
+                //    }
+                //}
             }
             return timestampExcelColumnIndex;
         }
 
-        internal int GetPrimaryExcelColumnIndex()
+        internal int GetPrimaryExcelColumnIndex(DataRow dr)
         {
             int primaryExcelColumnIndex = Cache.Instance.GetCacheValue<int>(CurrentSheetConfig.Name, Cache.Primary_ExcelColumn_Index);
             if (primaryExcelColumnIndex <= 0)
             {
-                foreach (ColumnConfig columnConfig in CurrentSheetConfig.Columns)
+                string primaryColumnName = dr.Table.Columns[(int)dr[Constants.COLUMN_PrimaryColumnIndex]].ColumnName;
+                int excelColIndex = 0;
+                foreach (DataColumn dc in Utility.FindExcelTable(_excelSet, CurrentSheetConfig.Name).Columns)
                 {
-                    if (!columnConfig.Primary)
-                        continue;
-
-                    int excelColIndex = 0;
-                    foreach (DataColumn dc in Utility.FindExcelTable(_excelSet, CurrentSheetConfig.Name).Columns)
+                    if (dc.ColumnName == primaryColumnName)
                     {
-                        if (dc.ColumnName == columnConfig.DisplayName)
-                        {
-                            Cache.Instance.SetCacheValue<int>(CurrentSheetConfig.Name, Cache.Primary_ExcelColumn_Index, excelColIndex);
-                            return excelColIndex;
-                        }
-                        excelColIndex++;
+                        Cache.Instance.SetCacheValue<int>(CurrentSheetConfig.Name, Cache.Primary_ExcelColumn_Index, excelColIndex);
+                        return excelColIndex;
                     }
+                    excelColIndex++;
                 }
+                //foreach (ColumnConfig columnConfig in CurrentSheetConfig.Columns)
+                //{
+                //    if (!columnConfig.Primary)
+                //        continue;
+
+                //    int excelColIndex = 0;
+                //    foreach (DataColumn dc in Utility.FindExcelTable(_excelSet, CurrentSheetConfig.Name).Columns)
+                //    {
+                //        if (dc.ColumnName == columnConfig.DisplayName)
+                //        {
+                //            Cache.Instance.SetCacheValue<int>(CurrentSheetConfig.Name, Cache.Primary_ExcelColumn_Index, excelColIndex);
+                //            return excelColIndex;
+                //        }
+                //        excelColIndex++;
+                //    }
+                //}
             }
             return primaryExcelColumnIndex;
         }
 
-        internal int GetAvailableExcelRowCountWithoutHeader()
+        internal int GetAvailableExcelRowCountWithoutHeader(string excelTableName)
         {
-            return Utility.FindExcelTable(_excelSet, CurrentSheetConfig.Name).Rows.Count;
+            return Utility.FindExcelTable(_excelSet, excelTableName).Rows.Count;
         }
 
-        internal int GetAvailableExcelColumnCount()
-        {
-            return Utility.FindExcelTable(_excelSet, CurrentSheetConfig.Name).Columns.Count;
-        }
+        //internal int GetAvailableExcelColumnCount(string excelTableName)
+        //{
+        //    return Utility.FindExcelTable(_excelSet, excelTableName).Columns.Count;
+        //}
 
         private bool WriteDataRow(DataRow row, dynamic activeSheet, int rowIndexToWrite)
         {
@@ -851,16 +914,27 @@ namespace RCG
             #endregion
 
             int excelColIndex = 0;
+            int loopColIndex = -1;
             foreach (DataColumn col in row.Table.Columns)
             {
+                loopColIndex++;
                 if (Utility.IsExtractFromMetadata(col.ColumnName))
                     continue;
-                if (!Utility.IsColumnToOutput(col.ColumnName, CurrentSheetConfig))
+                // TODO: Here, if the SheetConfig is null, we use the existing excel data to write directly rather than
+                // re-generate.
+                if (CurrentSheetConfig == null)
+                {
+                    activeSheet.Cells[realExcelRowIndex, excelColIndex] = row[col.ColumnName].ToString();
                     continue;
+                }
+                if (!Utility.IsColumnToOutput(row, loopColIndex))
+                    continue;
+                //if (!Utility.IsColumnToOutput(col.ColumnName, CurrentSheetConfig))
+                //    continue;
 
                 excelColIndex++;
                 ColumnConfig columnConfig = FindColumnConfig(_config, row.Table.TableName, col.ColumnName);
-                if (columnConfig.ExtractFrom == Constants.PREDEFINED_AutoIncrease)
+                if (columnConfig != null && columnConfig.ExtractFrom == Constants.PREDEFINED_AutoIncrease)
                     activeSheet.Cells[realExcelRowIndex, excelColIndex] = (realExcelRowIndex - 1).ToString();
                 else
                     activeSheet.Cells[realExcelRowIndex, excelColIndex] = row[col.ColumnName].ToString();

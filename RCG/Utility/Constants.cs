@@ -22,6 +22,9 @@ namespace RCG
         public const string COLUMN_RowMode = "_*RowMode*_";
         public const string COLUMN_Formatter = "_*FormatString*_";
         public const string COLUMN_Tag = "_*Tag*_";
+        public const string COLUMN_PrimaryColumnIndex = "_*PrimaryColumnIndex*_";
+        public const string COLUMN_TimestampColumnIndex = "_*TimestampColumnIndex*_";
+        public const string COLUMN_OutputColumnIndex = "_*OutputColumnIndex*_";
 
         public const int HEADER_ROW_INDEX = 1;
 

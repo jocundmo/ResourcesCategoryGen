@@ -42,7 +42,10 @@ namespace RCG
                 if (string.IsNullOrEmpty(newOne))
                     return false;
 
-                foreach (DataRow row in Engine.ExcelSet.Tables[Engine.CurrentSheetConfig.Name].Rows)
+                if (!Engine.ExcelSet.Tables.Contains(dr.Table.TableName))
+                    return false;
+
+                foreach (DataRow row in Engine.ExcelSet.Tables[dr.Table.TableName].Rows)
                 {
                     string oldOne = row[fc.ExtractFrom].ToString();
                     if (string.IsNullOrEmpty(oldOne))
@@ -57,8 +60,10 @@ namespace RCG
                 string newOne = (string)dr[fc.ExtractFrom];
                 if (string.IsNullOrEmpty(newOne))
                     return false;
+                if (!Engine.ExcelSet.Tables.Contains(dr.Table.TableName))
+                    return false;
 
-                foreach (DataRow row in Engine.MetadataSet.Tables[Engine.CurrentSheetConfig.Name].Rows)
+                foreach (DataRow row in Engine.MetadataSet.Tables[dr.Table.TableName].Rows)
                 {
                     if (row == dr)
                         continue;
