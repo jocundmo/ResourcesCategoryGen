@@ -140,7 +140,8 @@ namespace RCG
 
         static void gp_OnHandlableException(object sender, HandlableExceptionEventArgs e)
         {
-            logger.LogMessage("Exception is handled: " + e.HandlableException.ToString());
+            string message = string.IsNullOrEmpty(e.KeyMessage) ? e.HandlableException.ToString() : e.KeyMessage;
+            logger.LogMessage("Exception is handled: " + message);
         }
 
         static void gp_OnReadingExcelRow(object sender, DataRowEventArgs e)

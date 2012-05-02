@@ -533,9 +533,10 @@ namespace RCG
                         File.Delete(_config.OutputPath.Trim());
                         deleted = true;
                     }
-                    catch (IOException ioex)
+                    catch (IOException ex)
                     {
-                        Console.WriteLine("Error: " + ioex.Message + " Press any key when ready...");
+                        if (OnHandlableException != null)
+                            OnHandlableException(this, new HandlableExceptionEventArgs(ex, "Error: " + ex.Message + " Press any key when ready..."));
                         Console.Read();
                     }
                 }
