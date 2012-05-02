@@ -114,7 +114,7 @@ namespace RCG
         {
             foreach (dynamic d in excelApp.Application.Sheets)
             {
-                if (d.Name == name)
+                if (d.Name.ToString().Trim() == name.Trim())
                     return d;
             }
             return null;

@@ -511,24 +511,41 @@ namespace RCG
         private void InitExcelActiveSheet()
         {
             // Inits the active sheet.
-            if (!string.IsNullOrEmpty(_config.BaselinePath.Trim()) &&
-                File.Exists(_config.BaselinePath.Trim()))
-            {
-                _excel.Application.Workbooks.Open(_config.BaselinePath.Trim());
-            }
-            else if (!string.IsNullOrEmpty(_config.OutputPath.Trim()) &&
+            // Baseline exists, then use it. ** Baseline concept is used for the original
+            // design that load the excel replaced by loading the xml. So now, this concept is 
+            // not that useful.
+            //if (!string.IsNullOrEmpty(_config.BaselinePath.Trim()) &&
+            //    File.Exists(_config.BaselinePath.Trim()))
+            //{
+            //    _excel.Application.Workbooks.Open(_config.BaselinePath.Trim());
+            //}
+            // Output exists but baseline not, use output.
+            if (!string.IsNullOrEmpty(_config.OutputPath.Trim()) &&
                 File.Exists(_config.OutputPath.Trim()))
             {
-                _excel.Application.Workbooks.Open(_config.OutputPath.Trim());
+                if (_config.Backup)
+                    File.Copy(_config.OutputPath, _config.OutputPath + DateTime.Now.ToString("yyyyMMddHHmmss"));
+                bool deleted = false;
+                while (!deleted)
+                {
+                    try
+                    {
+                        File.Delete(_config.OutputPath.Trim());
+                        deleted = true;
+                    }
+                    catch (IOException ioex)
+                    {
+                        Console.WriteLine("Error: " + ioex.Message + " Press any key when ready...");
+                        Console.Read();
+                    }
+                }
             }
+            // Neither baseline nor output exists, use template.
+            if (!string.IsNullOrEmpty(_config.TemplatePath.Trim()) &&
+                File.Exists(_config.TemplatePath.Trim()))
+                _excel.Application.Workbooks.Open(_config.TemplatePath.Trim());
             else
-            {
-                if (!string.IsNullOrEmpty(_config.TemplatePath.Trim()) &&
-                    File.Exists(_config.TemplatePath.Trim()))
-                    _excel.Application.Workbooks.Open(_config.TemplatePath.Trim());
-                else
-                    _excel.Application.Workbooks.Add(true);
-            }
+                _excel.Application.Workbooks.Add(true);
         }
         public void RefreshExcel()
         {
@@ -560,16 +577,16 @@ namespace RCG
                         ExcelOperationWrapper.ClearExcelSheetWithoutHeader(CurrentActiveExcelSheet, GetAvailableExcelRowCountWithoutHeader());
 
                     // Generates rows
-                    int rowIndexToWrite = 0;
+                    int rowIndexToWrite = 2;
                     int existedExcelRowsCount = GetAvailableExcelRowCountWithoutHeader();
                     ExcelOperationWrapper.ClearExcelSheetFormatWithoutHeader(CurrentActiveExcelSheet, existedExcelRowsCount);
-                    Collection<DataRow> updateRowCollection = new Collection<DataRow>();
+                    //Collection<DataRow> updateRowCollection = new Collection<DataRow>();
+                    //Dictionary<int, DataRow> updateRowDict = new Dictionary<int, DataRow>();
                     foreach (DataRow row in table.Rows)
                     {
                         string rowMode = (string)row[Constants.COLUMN_RowMode];
 
-                        if (rowMode == Constants.ROW_MODE_Filtered ||
-                            rowMode == Constants.ROW_MODE_Ignored)
+                        if (rowMode == Constants.ROW_MODE_Filtered)
                             continue;
 
                         if (OnWritingDataRow != null)
@@ -577,7 +594,12 @@ namespace RCG
 
                         // First add all the rows which mode is "append" and marked all rows which mode is "update".
                         // Second update all the rows which mode is "update".
-                        if (rowMode == Constants.ROW_MODE_Append)
+                        if (rowMode == Constants.ROW_MODE_Ignored)
+                        {
+                            if (WriteDataRow(row, CurrentActiveExcelSheet, rowIndexToWrite))
+                                rowIndexToWrite++;
+                        }
+                        else if (rowMode == Constants.ROW_MODE_Append)
                         {
                             if (rowIndexToWrite == 0)
                                 rowIndexToWrite = existedExcelRowsCount + 2;
@@ -586,7 +608,11 @@ namespace RCG
                         }
                         else if (rowMode == Constants.ROW_MODE_Update)
                         {
-                            updateRowCollection.Add(row);
+                            //updateRowCollection.Add(row);
+                            // Should reserve the 'rowIndexToWrite' for update.
+                            //updateRowDict[rowIndexToWrite] = row;
+                            WriteDataRow(row, CurrentActiveExcelSheet, rowIndexToWrite);
+                            rowIndexToWrite++;
                         }
                         else if (rowMode == Constants.ROW_MODE_Refresh)
                         {
@@ -596,12 +622,16 @@ namespace RCG
                                 rowIndexToWrite++;
                         }
                     }
-                    foreach (DataRow row in updateRowCollection)
-                    {
-                        int absoluteRowIndexToWrite = GetExcelRowIndex(row) + 2;
-                        if (WriteDataRow(row, CurrentActiveExcelSheet, absoluteRowIndexToWrite))
-                            rowIndexToWrite = GetAvailableExcelRowCountWithoutHeader() + 2;
-                    }
+                    //foreach (var pair in updateRowDict)
+                    //{
+                    //    WriteDataRow(pair.Value, CurrentActiveExcelSheet, pair.Key);
+                    //}
+                    //foreach (DataRow row in updateRowCollection)
+                    //{
+                    //    int absoluteRowIndexToWrite = GetExcelRowIndex(row) + 2;
+                    //    if (WriteDataRow(row, CurrentActiveExcelSheet, absoluteRowIndexToWrite))
+                    //        rowIndexToWrite = GetAvailableExcelRowCountWithoutHeader() + 2;
+                    //}
                 }
 
                 _excel.ActiveWorkbook.SaveAs(_config.OutputPath);
@@ -791,7 +821,7 @@ namespace RCG
             if (!string.IsNullOrEmpty(formatterToken))
             {
                 //IFormatter formatter = row[Constants.COLUMN_Formatter] as IFormatter;
-                string[] formatterTokens = formatterToken.Split(new string[] { FormatterConfig.TokenSplitter }, StringSplitOptions.RemoveEmptyEntries);
+                string[] formatterTokens = formatterToken.Split(new string[] { FormatterConfig.TokenSplitter }, StringSplitOptions.None);
                 IFormatter formatter = FormatterFactory.GetFormatter(formatterTokens[0], formatterTokens[1], formatterTokens[2], this);
                 if (formatter != null)
                     formatter.Execute(realExcelRowIndex);

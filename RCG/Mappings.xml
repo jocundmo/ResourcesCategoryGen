@@ -8,7 +8,7 @@
         COLUMN_SubFolderCount = "_SubFolderCount_";
         COLUMN_FromFile = "_FromFile_";
 -->
-<Document templatePath="c:\template.xls" baselinePath="c:\mjm.xls" outputPath="c:\mjm.xls">
+<Document templatePath="c:\template.xls" baselinePath="c:\mjm.xls" backup="true" outputPath="c:\mjm.xls">
     <Sheets>
         <Sheet name="高清电影" enabled="true" mode="append" maxRowCount="600">
             <Formatters>
@@ -16,7 +16,7 @@
                 <Formatter name="update_formatter" extractFrom="" ruleType="UpdatedItemFormatter" rule="" formatString="back-color:darkblue;fore-color:yellow"></Formatter>
                 <Formatter enabled="false" name="refresh_formatter" extractFrom="" ruleType="RefreshedItemFormatter" rule="" formatString="fore-color:red"></Formatter>
                 <Formatter name="duplicated_formatter" extractFrom="中文名" ruleType="DuplicatedItemFormatter" rule="" formatString="back-color:green;fore-color:pink"></Formatter>
-                <Formatter name="formatter1" extractFrom="大小(MB)" ruleType="NumberCompareFormatter" rule="less_than:180" formatString="fore-color:yellow;back-color:red"></Formatter>
+                <Formatter name="formatter1" extractFrom="大小(MB)" ruleType="NumberCompareFormatter" rule="less_than:180" formatString="fore-color:green;back-color:red"></Formatter>
             </Formatters>
             <Filters>
                 <Filter name="1" extractFrom="_Path_" ruleType="RegularExpressionFilter" rule="======"></Filter>
@@ -24,8 +24,8 @@
             <Locations>
                 <Location enabled="false" path="\\192.168.1.115\高清电影02" include="Folder"></Location>
                 <Location enabled="false" path="\\192.168.1.105\高清电影01" include="*.mp3"></Location>
-                <Location enabled="false" path="\\192.168.1.105\高清电影1024-3"></Location>
-                <Location path="C:\New Folder" include="folder"></Location>
+                <Location enabled="true" path="\\192.168.2.161\高清电影1024_03"></Location>
+                <Location enabled="false" path="C:\New Folder" include="folder"></Location>
             </Locations>
             <Columns>
                 <Column name="序号"   extractFrom="_AutoIncrease_" ruleType="" rule="" ></Column>

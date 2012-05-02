@@ -30,6 +30,7 @@ namespace RCG
         public string TemplatePath { get; set; }
         public string BaselinePath { get; set; }
         public string OutputPath { get; set; }
+        public bool Backup { get; set; }
 
         public void Read(string configFileName)
         {
@@ -42,6 +43,7 @@ namespace RCG
             this.TemplatePath = Utility.GetAttributeValue(xnlRoot[0], "templatePath", string.Empty);
             this.BaselinePath = Utility.GetAttributeValue(xnlRoot[0], "baselinePath", string.Empty);
             this.OutputPath = Utility.GetAttributeValue(xnlRoot[0], "outputPath", DateTime.Now.ToString("yyyyMMdd"));
+            this.Backup = bool.Parse(Utility.GetAttributeValue(xnlRoot[0], "backup", "true"));
 
             XmlNodeList xnlSheets = ((XmlElement)xnlRoot[0]).SelectNodes("Sheets/Sheet");
             foreach (XmlElement xeSheet in xnlSheets)
