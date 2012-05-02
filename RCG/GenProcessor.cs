@@ -235,10 +235,27 @@ namespace RCG
             }
         }
 
+        private DataSet CombineMetadataExcelDataset()
+        {
+            DataSet datasetToExecute = new DataSet();
+            foreach (DataTable table in _metadataSet.Tables)
+            {
+                if (!datasetToExecute.Tables.Contains(table.TableName))
+                    datasetToExecute.Tables.Add(table.Copy());
+            }
+            foreach (DataTable table in _excelSet.Tables)
+            {
+                if (!datasetToExecute.Tables.Contains(table.TableName))
+                    datasetToExecute.Tables.Add(table.Copy());
+            }
+            return datasetToExecute;
+        }
+
         public void OutputTemporaryFiles(string filename)
         {
-            _metadataSet.WriteXmlSchema(filename + ".xsd");
-            _metadataSet.WriteXml(filename);
+            DataSet datasetToExecute = CombineMetadataExcelDataset();
+            datasetToExecute.WriteXmlSchema(filename + ".xsd");
+            datasetToExecute.WriteXml(filename);
         }
         /// <summary>
         /// Reads the original existing excel to determine what already exists.
@@ -357,6 +374,7 @@ namespace RCG
             //XmlDocument xdoc = new XmlDocument();
             //xdoc.Load("rcg_post_temp.xml");
             //StreamReader sr = new StreamReader("rcg_post_temp.xml");
+
             if (!File.Exists(filename + ".xsd")) // If the previous schema did not exist, we use the meatadata to generate.
             {
                 foreach (SheetConfig sheetConfig in _config.Sheets)
@@ -370,7 +388,7 @@ namespace RCG
                 _metadataSet.WriteXmlSchema(filename + ".xsd");
                 //_metadataSet.Clear();
             }
-            if (File.Exists(filename + ".xsd"))
+            //if (File.Exists(filename + ".xsd"))
             {
                 _excelSet.ReadXmlSchema(filename + ".xsd");
             }
@@ -552,18 +570,8 @@ namespace RCG
         {
             _excel = new Excel.Application();
             InitExcelActiveSheet();
-            // Combine the _metadataSet & _excelSet ==>
-            DataSet datasetToExecute = new DataSet();
-            foreach (DataTable table in _excelSet.Tables)
-            {
-                if (!datasetToExecute.Tables.Contains(table.TableName))
-                    datasetToExecute.Tables.Add(table.Copy());
-            }
-            foreach (DataTable table in _metadataSet.Tables)
-            {
-                if (!datasetToExecute.Tables.Contains(table.TableName))
-                    datasetToExecute.Tables.Add(table.Copy());
-            }
+            // Combine the _metadataSet & _excelSet for the case first deinfed in mappings.xml then be disabled ==>
+            DataSet datasetToExecute = CombineMetadataExcelDataset();
             // <==
             try
             {
