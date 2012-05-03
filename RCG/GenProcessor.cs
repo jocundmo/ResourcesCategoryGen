@@ -454,6 +454,16 @@ namespace RCG
                         
                         CurrentColumnConfig = columnConfig;
 
+                        #region Set the special columns index
+                        if (columnConfig.Primary)
+                            metadataRow[Constants.COLUMN_PrimaryColumnIndex] = columnIndex;
+                        if (columnConfig.Timestamp)
+                            metadataRow[Constants.COLUMN_TimestampColumnIndex] = columnIndex;
+                        if (columnConfig.Output)
+                            metadataRow[Constants.COLUMN_OutputColumnIndex] += string.Format("{0},", columnIndex);
+
+                        #endregion
+
                         // The column with Enabled=false couldn't even be added. So we no need write the code to skip the disabled column.
                         if (!Utility.IsValidExtractFrom(columnConfig.ExtractFrom.Trim()))
                             continue;
@@ -465,16 +475,6 @@ namespace RCG
                         string procssedContent = rp.Process(originalContent);
 
                         metadataRow[dcOutput] = procssedContent;
-
-                        #region Set the special columns index
-                        if (columnConfig.Primary)
-                            metadataRow[Constants.COLUMN_PrimaryColumnIndex] = columnIndex;
-                        if (columnConfig.Timestamp)
-                            metadataRow[Constants.COLUMN_TimestampColumnIndex] = columnIndex;
-                        if (columnConfig.Output)
-                            metadataRow[Constants.COLUMN_OutputColumnIndex] += string.Format("{0},", columnIndex);
-
-                        #endregion
 
                     }
                     #endregion
