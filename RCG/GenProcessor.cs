@@ -67,13 +67,15 @@ namespace RCG
                     return sheetConfig;
                 }
             }
-            //return null;
-            throw new Exception(string.Format("Sheet config {0} not recognized...", sheetName));
+            return null;
+            //throw new Exception(string.Format("Sheet config {0} not recognized...", sheetName));
         }
 
         private ColumnConfig FindColumnConfig(ConfigDoc config, string sheetName, string columnName)
         {
             SheetConfig sheetConfig = FindSheetConfig(config, sheetName);
+            if (sheetConfig == null)
+                return null;
 
             foreach (ColumnConfig columnConfig in sheetConfig.Columns)
             {
@@ -83,8 +85,8 @@ namespace RCG
                     return columnConfig;
                 }
             }
-            //return null;
-            throw new Exception(string.Format("Column config {0} of Sheet {1} is not recognized...", columnName, sheetName));
+            return null;
+            //throw new Exception(string.Format("Column config {0} of Sheet {1} is not recognized...", columnName, sheetName));
         }
 
         #endregion
