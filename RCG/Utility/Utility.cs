@@ -124,6 +124,12 @@ namespace RCG
             return valid;
         }
 
+
+        public static bool IsPredefinedColumn(string path)
+        {
+            return path.Trim() == Constants.PREDEFINED_AutoIncrease;
+        }
+
         public static bool IsColumnToOutput(DataRow row,  int currentColumnIndex)
         {
             string[] columnsCouldOutput = ((string)row[Constants.COLUMN_OutputColumnIndex]).Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries);
@@ -181,5 +187,6 @@ namespace RCG
             //else
             //    return defaultValue;
         }
+
     }
 }

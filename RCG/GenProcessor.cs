@@ -437,75 +437,11 @@ namespace RCG
                 DataTable metadataTable = Utility.FindMetadataTable(_metadataSet, sheetConfig.Name);
                 SetupOutputTableSchema(metadataTable, sheetConfig);
 
+                int rowIndex = -1;
+                int autoIncreaseNumber = 0;
                 foreach (DataRow metadataRow in metadataTable.Rows)
                 {
-                    #region Process metadata
-                    if (OnProcessingMetadata != null)
-                        OnProcessingMetadata(this, new DataRowEventArgs(metadataRow, Constants.COLUMN_Path));
-                    int columnIndex = -1;
-                    foreach (DataColumn dcOutput in metadataTable.Columns)
-                    {
-                        columnIndex++;
-                        if (Utility.IsExtractFromMetadata(dcOutput.ColumnName))
-                            continue;
-                        // Get metadata content.
-                        string originalContent = string.Empty;
-                        ColumnConfig columnConfig = FindColumnConfig(_config, metadataTable.TableName, dcOutput.ColumnName);
-                        
-                        CurrentColumnConfig = columnConfig;
-
-                        #region Set the special columns index
-                        if (columnConfig.Primary)
-                            metadataRow[Constants.COLUMN_PrimaryColumnIndex] = columnIndex;
-                        if (columnConfig.Timestamp)
-                            metadataRow[Constants.COLUMN_TimestampColumnIndex] = columnIndex;
-                        if (columnConfig.Output)
-                            metadataRow[Constants.COLUMN_OutputColumnIndex] += string.Format("{0},", columnIndex);
-
-                        #endregion
-
-                        // The column with Enabled=false couldn't even be added. So we no need write the code to skip the disabled column.
-                        if (!Utility.IsValidExtractFrom(columnConfig.ExtractFrom.Trim()))
-                            continue;
-
-                        originalContent = Utility.GetDataRowContent(metadataRow, columnConfig.ExtractFrom.Trim());
-
-                        // Process the metadata.
-                        BaseRuleProcessor rp = RuleProcessorFactory.GetRuleProcessor(columnConfig, this);
-                        string procssedContent = rp.Process(originalContent);
-
-                        metadataRow[dcOutput] = procssedContent;
-
-                    }
-                    #endregion
-
-
-
-                    #region Set row mode
-                    if (OnSettingRowMode != null)
-                        OnSettingRowMode(this, new DataRowEventArgs(metadataRow, Constants.COLUMN_Path));
-
-                    metadataRow[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Ignored;
-
-                    if (CurrentSheetConfig.Mode == Constants.SHEET_MODE_Refresh)
-                        metadataRow[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Refresh;
-                    else
-                    {
-                        DataRowExistsOrExpires r = IsDataRowExistsOrExpires(metadataRow);
-
-                        bool isRowExists = (r != DataRowExistsOrExpires.NotExists);
-
-                        if (!isRowExists)
-                            metadataRow[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Append;
-                        else
-                        {
-                            bool isRowExpires = (r == DataRowExistsOrExpires.ExistsAndExpires);
-                            if (isRowExpires)
-                                metadataRow[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Update;
-                        }
-                    }
-
-                    #endregion
+                    rowIndex++;
 
                     #region Filter
                     if (OnFiltering != null)
@@ -530,25 +466,100 @@ namespace RCG
                         metadataRow[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Filtered;
 
                     #endregion
-
-                    #region Formatter
-                    if (OnFormatting != null)
-                        OnFormatting(this, new DataRowEventArgs(metadataRow, Constants.COLUMN_Path));
-
-                    foreach (FormatterConfig formatterConfig in sheetConfig.Formatters)
+                    if (!filtered)
                     {
-                        if (!formatterConfig.Enabled)
-                            continue;
-                        //We should instanc the formatter when use it, not here.
-                        IFormatter formatter = FormatterFactory.GetFormatter(formatterConfig.RuleType, formatterConfig.Rule, formatterConfig.FormatString, this);
-                        string formatterToken = formatterConfig.Token;
-                        // Same issue with above, we should put off to decide when to apply formatter.
-                        if (formatter.Match(metadataRow, formatterConfig))
+                        autoIncreaseNumber++; // auto_increase is only available for the row which is not filter out.
+                        #region Process metadata
+                        if (OnProcessingMetadata != null)
+                            OnProcessingMetadata(this, new DataRowEventArgs(metadataRow, Constants.COLUMN_Path));
+                        int columnIndex = -1;
+                        foreach (DataColumn dcOutput in metadataTable.Columns)
                         {
-                            metadataRow[Constants.COLUMN_Formatter] = formatterToken;
+                            columnIndex++;
+                            if (Utility.IsExtractFromMetadata(dcOutput.ColumnName))
+                                continue;
+                            // Get metadata content.
+                            string originalContent = string.Empty;
+                            ColumnConfig columnConfig = FindColumnConfig(_config, metadataTable.TableName, dcOutput.ColumnName);
+
+                            CurrentColumnConfig = columnConfig;
+
+                            #region Set the special columns index
+                            if (columnConfig.Primary)
+                                metadataRow[Constants.COLUMN_PrimaryColumnIndex] = columnIndex;
+                            if (columnConfig.Timestamp)
+                                metadataRow[Constants.COLUMN_TimestampColumnIndex] = columnIndex;
+                            if (columnConfig.Output)
+                                metadataRow[Constants.COLUMN_OutputColumnIndex] += string.Format("{0},", columnIndex);
+
+                            #endregion
+
+                            // Predefined column like auto increased column shall be handled specifically here.
+                            if (Utility.IsPredefinedColumn(columnConfig.ExtractFrom.Trim()))
+                            {
+                                metadataRow[dcOutput] = autoIncreaseNumber; // "No." column shall be 1 based, not 0 based.
+                            }
+
+                            // The column with Enabled=false couldn't even be added. So we no need write the code to skip the disabled column.
+                            if (!Utility.IsValidExtractFrom(columnConfig.ExtractFrom.Trim()))
+                                continue;
+
+                            originalContent = Utility.GetDataRowContent(metadataRow, columnConfig.ExtractFrom.Trim());
+
+                            // Process the metadata.
+                            BaseRuleProcessor rp = RuleProcessorFactory.GetRuleProcessor(columnConfig, this);
+                            string procssedContent = rp.Process(originalContent);
+
+                            metadataRow[dcOutput] = procssedContent;
+
                         }
+                        #endregion
+
+                        #region Set row mode
+                        if (OnSettingRowMode != null)
+                            OnSettingRowMode(this, new DataRowEventArgs(metadataRow, Constants.COLUMN_Path));
+
+                        metadataRow[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Ignored;
+
+                        if (CurrentSheetConfig.Mode == Constants.SHEET_MODE_Refresh)
+                            metadataRow[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Refresh;
+                        else
+                        {
+                            DataRowExistsOrExpires r = IsDataRowExistsOrExpires(metadataRow);
+
+                            bool isRowExists = (r != DataRowExistsOrExpires.NotExists);
+
+                            if (!isRowExists)
+                                metadataRow[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Append;
+                            else
+                            {
+                                bool isRowExpires = (r == DataRowExistsOrExpires.ExistsAndExpires);
+                                if (isRowExpires)
+                                    metadataRow[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Update;
+                            }
+                        }
+
+                        #endregion
+
+                        #region Formatter
+                        if (OnFormatting != null)
+                            OnFormatting(this, new DataRowEventArgs(metadataRow, Constants.COLUMN_Path));
+
+                        foreach (FormatterConfig formatterConfig in sheetConfig.Formatters)
+                        {
+                            if (!formatterConfig.Enabled)
+                                continue;
+                            //We should instanc the formatter when use it, not here.
+                            IFormatter formatter = FormatterFactory.GetFormatter(formatterConfig.RuleType, formatterConfig.Rule, formatterConfig.FormatString, this);
+                            string formatterToken = formatterConfig.Token;
+                            // Same issue with above, we should put off to decide when to apply formatter.
+                            if (formatter.Match(metadataRow, formatterConfig))
+                            {
+                                metadataRow[Constants.COLUMN_Formatter] = formatterToken;
+                            }
+                        }
+                        #endregion
                     }
-                    #endregion
                 }
             }
         }
@@ -620,7 +631,9 @@ namespace RCG
                         // If sheetConfig equals null, means the sheet is already there and no need re-generate column header.
                         //if (sheetConfig == null || !Utility.IsColumnToOutput(col.ColumnName, sheetConfig))
                         //    continue;
-                        if (!Utility.IsColumnToOutput(table.Rows[0], loopColIndex))
+
+
+                        if (!Utility.IsColumnToOutput(FindFirstUnfilteredRow(table), loopColIndex))
                             continue;
 
                         excelColIndex++;
@@ -703,6 +716,16 @@ namespace RCG
 
                 GC.Collect();
             }
+        }
+
+        private DataRow FindFirstUnfilteredRow(DataTable table)
+        {
+            foreach (DataRow dr in table.Rows)
+            {
+                if (!(bool)dr[Constants.COLUMN_FilterFlag])
+                    return dr;
+            }
+            return null;
         }
 
         #endregion
@@ -935,11 +958,11 @@ namespace RCG
                 //    continue;
 
                 excelColIndex++;
-                ColumnConfig columnConfig = FindColumnConfig(_config, row.Table.TableName, col.ColumnName);
-                if (columnConfig != null && columnConfig.ExtractFrom == Constants.PREDEFINED_AutoIncrease)
-                    activeSheet.Cells[realExcelRowIndex, excelColIndex] = (realExcelRowIndex - 1).ToString();
-                else
-                    activeSheet.Cells[realExcelRowIndex, excelColIndex] = row[col.ColumnName].ToString();
+                //ColumnConfig columnConfig = FindColumnConfig(_config, row.Table.TableName, col.ColumnName);
+                //if (columnConfig != null && columnConfig.ExtractFrom == Constants.PREDEFINED_AutoIncrease)
+                //    activeSheet.Cells[realExcelRowIndex, excelColIndex] = (realExcelRowIndex - 1).ToString();
+                //else
+                activeSheet.Cells[realExcelRowIndex, excelColIndex] = row[col.ColumnName].ToString();
             }
 
             return true;
