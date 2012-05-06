@@ -269,52 +269,58 @@ namespace RCG
                         // Merge the metadata into existing table.
                         DataTable tableMetadata = Utility.FindMetadataTable(_metadataSet, table.TableName);
                         DataTable tableExcel = Utility.FindExcelTable(_excelSet, table.TableName);
-
-                        // Counts the non-filter rows in existing table ==>
-                        int nonFilteredRowsCount = 0;
-                        foreach (DataRow dr in tableExcel.Rows)
+                        if (tableExcel != null)
                         {
-                            #region Formatter column should be erased
-                            dr[Constants.COLUMN_Formatter] = string.Empty;
-                            #endregion
-
-                            if (!(bool)dr[Constants.COLUMN_FilterFlag])
-                                nonFilteredRowsCount++;
-                        }
-                        // <==
-
-                        if (tableMetadata != null)
-                        {
-                            string[] autoIncreasedColumnIndexes = ((string)FindFirstUnfilteredRow(tableMetadata)[Constants.COLUMN_AutoIncreaseColumnIndex]).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                            int rowIndex = nonFilteredRowsCount;
-                            foreach (DataRow dr in tableMetadata.Rows)
+                            // Counts the non-filter rows in existing table ==>
+                            int nonFilteredRowsCount = 0;
+                            foreach (DataRow dr in tableExcel.Rows)
                             {
-                                rowIndex++;
-                                if ((string)dr[Constants.COLUMN_RowMode] == Constants.ROW_MODE_Ignored)
-                                    continue;
-                                DataRow newRow = tableExcel.NewRow();
-
-                                #region Special columns that should not be moved from existing table directly
-
-                                #region Auto increased column
-                                for (int i = 0; i < tableMetadata.Columns.Count; i++)
-                                {
-                                    
-                                    foreach (string index in autoIncreasedColumnIndexes)
-                                    {
-                                        if (int.Parse(index) == i)
-                                            newRow[i] = rowIndex;
-                                        else
-                                            newRow[i] = dr[i];
-                                    }
-                                }
+                                #region Formatter column should be erased
+                                dr[Constants.COLUMN_Formatter] = string.Empty;
                                 #endregion
 
-                                #endregion
-                                tableExcel.Rows.Add(newRow);
+                                if (!(bool)dr[Constants.COLUMN_FilterFlag])
+                                    nonFilteredRowsCount++;
                             }
+                            // <==
+
+                            if (tableMetadata != null)
+                            {
+                                string[] autoIncreasedColumnIndexes = ((string)FindFirstUnfilteredRow(tableMetadata)[Constants.COLUMN_AutoIncreaseColumnIndex]).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                                int rowIndex = nonFilteredRowsCount;
+                                foreach (DataRow dr in tableMetadata.Rows)
+                                {
+                                    rowIndex++;
+                                    if ((string)dr[Constants.COLUMN_RowMode] == Constants.ROW_MODE_Ignored)
+                                        continue;
+                                    DataRow newRow = tableExcel.NewRow();
+
+                                    #region Special columns that should not be moved from existing table directly
+
+                                    #region Auto increased column
+                                    for (int i = 0; i < tableMetadata.Columns.Count; i++)
+                                    {
+
+                                        foreach (string index in autoIncreasedColumnIndexes)
+                                        {
+                                            if (int.Parse(index) == i)
+                                                newRow[i] = rowIndex;
+                                            else
+                                                newRow[i] = dr[i];
+                                        }
+                                    }
+                                    #endregion
+
+                                    #endregion
+                                    tableExcel.Rows.Add(newRow);
+                                }
+                            }
+                            datasetToExecute.Tables.Add(tableExcel.Copy());
                         }
-                        datasetToExecute.Tables.Add(tableExcel.Copy());
+                        else
+                        {
+                            datasetToExecute.Tables.Add(tableMetadata.Copy());
+                        }
                     }
                 }
                 foreach (DataTable table in _excelSet.Tables)

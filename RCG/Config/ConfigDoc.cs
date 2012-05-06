@@ -130,8 +130,23 @@ namespace RCG
 
         public void Validate()
         {
+            bool isSheetConfigValid = false;
+            bool isLocationConfigValid = false;
+
             foreach (SheetConfig sheetConfig in _sheets)
             {
+                if (sheetConfig.Enabled)
+                    isSheetConfigValid = true;
+
+                if (isSheetConfigValid)
+                {
+                    foreach (LocationConfig locationConfig in sheetConfig.Locations)
+                    {
+                        if (locationConfig.Enabled)
+                            isLocationConfigValid = true;
+                    }
+                }
+
                 bool foundPrimaryColumn = false;
                 bool foundTimestampColumn = false;
                 foreach (ColumnConfig columnConfig in sheetConfig.Columns)
@@ -154,6 +169,11 @@ namespace RCG
                 if (!foundTimestampColumn)
                     throw new Exception(string.Format("Sheet {0} no Timestamp column found, make sure one is defined", sheetConfig.Name));
             }
+
+            if (!isSheetConfigValid)
+                throw new Exception("There should be at least one sheet enabled.");
+            if (!isLocationConfigValid)
+                throw new Exception("There should be at least one location enabled.");
         }
     }
 }
