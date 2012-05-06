@@ -98,7 +98,8 @@ namespace RCG
                 if (dt.TableName == metadataTableName)
                     return dt;
             }
-            throw new Exception(string.Format("Metadata table {0} not recognized...", metadataTableName));
+            return null;
+            //throw new Exception(string.Format("Metadata table {0} not recognized...", metadataTableName));
         }
 
         public static DataTable FindExcelTable(DataSet excelSet, string excelTableName)
@@ -108,7 +109,8 @@ namespace RCG
                 if (dt.TableName == excelTableName)
                     return dt;
             }
-            throw new Exception(string.Format("Excel table {0} not recognized...", excelTableName));
+            return null;
+            //throw new Exception(string.Format("Excel table {0} not recognized...", excelTableName));
         }
 
         public static bool IsExtractFromMetadata(string path)

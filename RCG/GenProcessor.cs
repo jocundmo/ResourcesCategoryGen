@@ -32,6 +32,7 @@ namespace RCG
         private ConfigDoc _config = new ConfigDoc();
         private DataSet _metadataSet = new DataSet();
         private DataSet _excelSet = new DataSet();
+        private DataSet _combinedSet = null;
         private Excel.Application _excel;
 
         #endregion
@@ -154,6 +155,8 @@ namespace RCG
                 dt.Columns.Add(dcTimestampColumnIndex);
                 DataColumn dcOutputColumnIndex = new DataColumn(Constants.COLUMN_OutputColumnIndex, typeof(string));
                 dt.Columns.Add(dcOutputColumnIndex);
+                DataColumn dcAutoIncreaseColumnIndex = new DataColumn(Constants.COLUMN_AutoIncreaseColumnIndex, typeof(string));
+                dt.Columns.Add(dcAutoIncreaseColumnIndex);
 
                 // Read metadata.
                 foreach (LocationConfig locationConfig in sheetConfig.Locations)
@@ -249,18 +252,79 @@ namespace RCG
 
         private DataSet CombineMetadataExcelDataset()
         {
-            DataSet datasetToExecute = new DataSet();
-            foreach (DataTable table in _metadataSet.Tables)
+            if (_combinedSet == null)
             {
-                if (!datasetToExecute.Tables.Contains(table.TableName))
-                    datasetToExecute.Tables.Add(table.Copy());
+                DataSet datasetToExecute = new DataSet();
+
+                foreach (DataTable table in _metadataSet.Tables)
+                {
+                    if (table.Prefix == Constants.SHEET_MODE_Refresh)
+                    {
+                        // If the refresh mode, we could abandon the exising data in excel dataset.
+                        if (!datasetToExecute.Tables.Contains(table.TableName))
+                            datasetToExecute.Tables.Add(table.Copy());
+                    }
+                    else
+                    {
+                        // Merge the metadata into existing table.
+                        DataTable tableMetadata = Utility.FindMetadataTable(_metadataSet, table.TableName);
+                        DataTable tableExcel = Utility.FindExcelTable(_excelSet, table.TableName);
+
+                        // Counts the non-filter rows in existing table ==>
+                        int nonFilteredRowsCount = 0;
+                        foreach (DataRow dr in tableExcel.Rows)
+                        {
+                            #region Formatter column should be erased
+                            dr[Constants.COLUMN_Formatter] = string.Empty;
+                            #endregion
+
+                            if (!(bool)dr[Constants.COLUMN_FilterFlag])
+                                nonFilteredRowsCount++;
+                        }
+                        // <==
+
+                        if (tableMetadata != null)
+                        {
+                            string[] autoIncreasedColumnIndexes = ((string)FindFirstUnfilteredRow(tableMetadata)[Constants.COLUMN_AutoIncreaseColumnIndex]).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                            int rowIndex = nonFilteredRowsCount;
+                            foreach (DataRow dr in tableMetadata.Rows)
+                            {
+                                rowIndex++;
+                                if ((string)dr[Constants.COLUMN_RowMode] == Constants.ROW_MODE_Ignored)
+                                    continue;
+                                DataRow newRow = tableExcel.NewRow();
+
+                                #region Special columns that should not be moved from existing table directly
+
+                                #region Auto increased column
+                                for (int i = 0; i < tableMetadata.Columns.Count; i++)
+                                {
+                                    
+                                    foreach (string index in autoIncreasedColumnIndexes)
+                                    {
+                                        if (int.Parse(index) == i)
+                                            newRow[i] = rowIndex;
+                                        else
+                                            newRow[i] = dr[i];
+                                    }
+                                }
+                                #endregion
+
+                                #endregion
+                                tableExcel.Rows.Add(newRow);
+                            }
+                        }
+                        datasetToExecute.Tables.Add(tableExcel.Copy());
+                    }
+                }
+                foreach (DataTable table in _excelSet.Tables)
+                {
+                    if (!datasetToExecute.Tables.Contains(table.TableName))
+                        datasetToExecute.Tables.Add(table.Copy());
+                }
+                _combinedSet = datasetToExecute;
             }
-            foreach (DataTable table in _excelSet.Tables)
-            {
-                if (!datasetToExecute.Tables.Contains(table.TableName))
-                    datasetToExecute.Tables.Add(table.Copy());
-            }
-            return datasetToExecute;
+            return _combinedSet;
         }
 
         public void OutputTemporaryFiles(string filename)
@@ -491,7 +555,8 @@ namespace RCG
                                 metadataRow[Constants.COLUMN_TimestampColumnIndex] = columnIndex;
                             if (columnConfig.Output)
                                 metadataRow[Constants.COLUMN_OutputColumnIndex] += string.Format("{0},", columnIndex);
-
+                            if (columnConfig.ExtractFrom == Constants.PREDEFINED_AutoIncrease)
+                                metadataRow[Constants.COLUMN_AutoIncreaseColumnIndex] += string.Format("{0},", columnIndex);
                             #endregion
 
                             // Predefined column like auto increased column shall be handled specifically here.
