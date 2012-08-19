@@ -68,12 +68,14 @@ namespace RCG
 
         static MessageLogger logger = new MessageLogger(string.Format("RCG_log_{0}.txt", DateTime.Now.ToString("yyyyMMdd-HHmmss")));
 
+        // RCG.exe -forceEnable=高清电影,游戏
         static void Main(string[] args)
         {
             string configFileName = "Mappings.xml";
+            string parameter = string.Empty;
             if (args != null && args.Length > 0)
             {
-                configFileName = args[0].Trim();
+                parameter = args[0].Trim();
             }
 
             GenProcessor gp = new GenProcessor();
@@ -89,8 +91,8 @@ namespace RCG
             try
             {
                 logger.LogMessage("[Step 1/5] Reading configuration...");
-                gp.ReadConfiguration(configFileName);
-
+                gp.ReadConfiguration(configFileName, parameter);
+                
                 logger.LogMessage("[Step 2/5] Generating metadata...");
                 gp.GenerateMetadata();
 

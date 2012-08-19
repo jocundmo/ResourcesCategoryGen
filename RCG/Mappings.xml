@@ -10,7 +10,7 @@
 -->
 <Document templatePath="c:\template.xls" baselinePath="c:\mjm.xls" backup="true" outputPath="c:\mjm.xls">
     <Sheets>
-        <Sheet name="高清电影" enabled="true" mode="append" maxRowCount="600" refMode="false">
+        <Sheet name="高清电影" enabled="false" mode="append" maxRowCount="600" refMode="false">
             <Formatters>
                 <Formatter name="append_formatter" extractFrom="" ruleType="AppendedItemFormatter" rule="" formatString="back-color:red;font-bold;font-italic"></Formatter>
                 <Formatter name="update_formatter" extractFrom="" ruleType="UpdatedItemFormatter" rule="" formatString="back-color:darkblue;fore-color:yellow"></Formatter>
@@ -86,12 +86,12 @@
           <Formatter enabled="false" name="formatter2" extractFrom="最后更新时间" ruleType="DateTimeCompareFormatter" rule="greater_than:2010/09/24" formatString="fore-color:green;back-color:yellow"></Formatter>
         </Formatters>
         <Locations>
-          <Location enabled="false" path="\\rabook\808G_01\03.Games\电脑游戏"></Location>
-          <Location enabled="false" path="\\rabook\2048G_01\03.Games"></Location>
-          <Location enabled="false" path="\\rabook\2048G_02\03.Games\___电脑游戏"></Location>
-          <Location enabled="true" path="C:\03.Games"></Location>
-          <Location enabled="true" path="C:\03.Games2"></Location>
-          <Location enabled="true" path="C:\03.Games3"></Location>
+          <Location enabled="true" path="\\rabook\808G_01\03.Games\电脑游戏"></Location>
+          <Location enabled="true" path="\\rabook\2048G_01\03.Games"></Location>
+          <Location enabled="true" path="\\rabook\2048G_02\03.Games\___电脑游戏"></Location>
+          <Location enabled="false" path="C:\03.Games"></Location>
+          <Location enabled="false" path="C:\03.Games2"></Location>
+          <Location enabled="false" path="C:\03.Games3"></Location>
         </Locations>
         <Columns>
           <Column name="序号" extractFrom="_AutoIncrease_" ruleType="" rule=""></Column>

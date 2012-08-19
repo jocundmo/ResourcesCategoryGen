@@ -98,10 +98,18 @@ namespace RCG
         /// Reads the configuration within "Mappings.xml"
         /// </summary>
         /// <param name="configFileName"></param>
-        public void ReadConfiguration(string configFileName)
+        public void ReadConfiguration(string configFileName, string hijackSheetEnableParameter)
         {
             _config.Read(configFileName);
+            if (!string.IsNullOrEmpty(hijackSheetEnableParameter))
+            {
+                this.HijackConfiguration(hijackSheetEnableParameter);
+            }
             _config.Validate();
+        }
+        public void ReadConfiguration(string configFileName)
+        {
+            ReadConfiguration(configFileName, string.Empty);
         }
         public void ReadConfiguration()
         {
@@ -226,8 +234,17 @@ namespace RCG
                 int fileCount = 0;
                 int subFolderCount = 0;
                 string filesType = string.Empty;
-                Utility.CalFolderSize(ref size, ref fileCount, ref subFolderCount, ref filesType, d);
-
+                try
+                {
+                    Utility.CalFolderSize(ref size, ref fileCount, ref subFolderCount, ref filesType, d);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    size = -1;
+                    fileCount = -1;
+                    subFolderCount = -1;
+                    filesType = "Access Denied";
+                }
                 dr[Constants.COLUMN_FilesType] = filesType;
                 dr[Constants.COLUMN_Size] = size.ToString();
                 dr[Constants.COLUMN_FileCount] = fileCount.ToString();
@@ -982,6 +999,26 @@ namespace RCG
         public event EventHandler<DataRowEventArgs> OnWritingDataRow;
 
         #endregion
+
+        private void HijackConfiguration(string parameter)
+        {
+            if (parameter.StartsWith("-forceEnable"))
+            {
+                string hijackSheetNameText = parameter.Replace("-forceEnable=", string.Empty);
+                string[] hijackSheetNames = hijackSheetNameText.Split(',');
+                foreach (string name in hijackSheetNames)
+                {
+                    foreach (SheetConfig sc in this.Config.Sheets)
+                    {
+                        if (sc.Name == name)
+                        {
+                            sc.Enabled = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public class HandlableExceptionEventArgs : EventArgs
