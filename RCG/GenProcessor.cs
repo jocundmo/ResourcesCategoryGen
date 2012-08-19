@@ -293,6 +293,10 @@ namespace RCG
                                     if ((string)dr[Constants.COLUMN_RowMode] == Constants.ROW_MODE_Ignored)
                                         continue;
 
+                                    // Should not increase AutoNumber when mode is "filetered".
+                                    if ((string)dr[Constants.COLUMN_RowMode] == Constants.ROW_MODE_Filtered)
+                                        continue;
+
                                     rowIndex++;
                                     DataRow newRow = tableExcel.NewRow();
 
@@ -764,12 +768,15 @@ namespace RCG
             int primaryColumnIndexOfDatatable = GetPrimaryDataColumnIndex(dr);
             int primaryColumnIndexOfExcel = GetPrimaryExcelColumnIndex(dr);
 
-            int rowIndex = 0;
+            int rowIndex = -1;
             foreach (DataRow row in Utility.FindExcelTable(_excelSet, CurrentSheetConfig.Name).Rows)
             {
+                rowIndex++;
+                if ((string)row[Constants.COLUMN_RowMode] == Constants.ROW_MODE_Filtered)
+                    continue;
+
                 if ((string)row[primaryColumnIndexOfExcel] == (string)dr[primaryColumnIndexOfDatatable])
                     return rowIndex;
-                rowIndex++;
             }
             return Constants.INT_NOT_FOUND_INDEX;
         }
