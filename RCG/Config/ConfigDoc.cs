@@ -52,7 +52,8 @@ namespace RCG
                 string sheetMode = Utility.GetAttributeValue(xeSheet, "mode", "refresh");
                 int sheetMaxRowCount = ConfigDoc.ConvertToInt(Utility.GetAttributeValue(xeSheet, "maxRowCount", "3000"));
                 bool sheetEnabled = ConfigDoc.ConvertToBoolean(Utility.GetAttributeValue(xeSheet, "enabled", "true"));
-                SheetConfig sheet = new SheetConfig(sheetName, sheetEnabled, sheetMode, sheetMaxRowCount);
+                bool sheetRefMode = ConfigDoc.ConvertToBoolean(Utility.GetAttributeValue(xeSheet, "refMode", "true"));
+                SheetConfig sheet = new SheetConfig(sheetName, sheetEnabled, sheetRefMode, sheetMode, sheetMaxRowCount);
                 // Read [Columns > Column]
                 XmlNodeList xnlColumns = xeSheet.SelectNodes("Columns/Column");
                 foreach (XmlElement xeColumn in xnlColumns)

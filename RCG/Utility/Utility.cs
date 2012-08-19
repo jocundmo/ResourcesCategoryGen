@@ -42,11 +42,13 @@ namespace RCG
         {
             LocationType r = LocationType.Unknown;
 
-            if (Regex.IsMatch(path, @"^[A-Za-z]:\\"))
+            if (Regex.IsMatch(path, @"^[A-Za-z]:\\")) // e.g.  c:\
                 r = LocationType.Physical;
-            else if (Regex.IsMatch(path, @"^\\\\\d{1,3}?\.\d{1,3}\.\d{1,3}\.\d{1,3}\\"))
+            else if (Regex.IsMatch(path, @"^\\\\\d{1,3}?\.\d{1,3}\.\d{1,3}\.\d{1,3}\\")) // e.g. \\192.168.2.165\
                 r = LocationType.Network;
-            else if (Regex.IsMatch(path, @"^[\w\d ]+\\"))
+            else if (Regex.IsMatch(path, @"\\\\[A-Za-z]+\\")) // e.g. \\rabook\
+                r = LocationType.Network;
+            else if (Regex.IsMatch(path, @"^[\w\d ]+\\")) // e.g. 808G_01\
                 r = LocationType.VolumeLabel;
 
             if (r == LocationType.Unknown)

@@ -16,21 +16,23 @@ namespace RCG
         public string Mode { get; set; }
         public int MaxRowCount { get; set; }
         public bool Enabled { get; set; }
+        public bool RefMode { get; set; }
         public List<ColumnConfig> Columns { get { return _columns; } }
         public List<LocationConfig> Locations { get { return _locations; } }
         public List<FilterConfig> Filters { get { return _filters; } }
         public List<FormatterConfig> Formatters { get { return _formatters; } }
 
-        public SheetConfig(string name, bool enabled, string mode, int maxRowCount)
+        public SheetConfig(string name, bool enabled, bool refMode, string mode, int maxRowCount)
         {
             this.Name = name;
             this.Enabled = enabled;
+            this.RefMode = refMode;
             this.Mode = mode;
             this.MaxRowCount = maxRowCount;
         }
 
         public SheetConfig(string name, string mode, int maxRowCount)
-            : this(name, true, mode, maxRowCount)
+            : this(name, true, true, mode, maxRowCount)
         {
             // Nothing to do.
         }

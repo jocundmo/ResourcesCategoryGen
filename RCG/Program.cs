@@ -11,6 +11,7 @@ using System.IO;
 
 namespace RCG
 {
+    // Bug1: Movie.HD as existing xml, but disabled it roll in Game as enabled xml. no response.
     class Program
     {
         private static void GenerateExcel()
@@ -87,18 +88,24 @@ namespace RCG
 
             try
             {
-                logger.LogMessage("Reading configuration...");
+                logger.LogMessage("[Step 1/5] Reading configuration...");
                 gp.ReadConfiguration(configFileName);
-                logger.LogMessage("Generating metadata...");
+
+                logger.LogMessage("[Step 2/5] Generating metadata...");
                 gp.GenerateMetadata();
-                logger.LogMessage("Reading excel...");
+
+                logger.LogMessage("[Step 3/5] Reading excel...");
                 //gp.OutputTemporaryFiles("rcg_temp.xml");
                 gp.ReadPreviousMetadata("rcg_post_temp.xml");
-                logger.LogMessage("Processing metadata table...");
+
+                logger.LogMessage("[Step 4/5] Processing metadata table...");
                 gp.ProcessMetadataTable();
+
                 gp.OutputTemporaryFiles("rcg_post_temp.xml");
-                logger.LogMessage("Generating excel...");
+
+                logger.LogMessage("[Step 5/5] Generating excel...");
                 gp.RefreshExcel();
+
                 logger.LogMessage("Done successfully!!!");
 
             }
