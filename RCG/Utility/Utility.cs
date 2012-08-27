@@ -21,7 +21,7 @@ namespace RCG
                 XmlAttribute findAttri = null;
                 foreach (XmlAttribute attrToBeReplaced in xeOri.Attributes)
                 {
-                    if (attrToBeReplaced.Name == attrNew.Name)
+                    if (attrToBeReplaced.Name.Equals(attrNew.Name, StringComparison.OrdinalIgnoreCase))
                     {
                         findAttri = attrToBeReplaced;
                         break;

@@ -72,9 +72,9 @@ namespace RCG
         // RCG.exe HD_Movies_Mappings.xml true
         static void Main(string[] args)
         {
-            args = new string[2];
-            args[0] = "Mappings_HDMovies.xml";
-            args[1] = "true";
+            //args = new string[2];
+            //args[0] = "Mappings_HDMovies.xml";
+            //args[1] = "true";
 
             string configFileName = "Mappings.xml";
             string hijackConfigurationParameter = string.Empty;
