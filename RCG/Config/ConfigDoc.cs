@@ -32,10 +32,45 @@ namespace RCG
         public string OutputPath { get; set; }
         public bool Backup { get; set; }
 
+        private void HijackConfiguration(XmlDocument xml, string hijackConfigurationParameter, bool onlyAttribute)
+        {
+            XmlDocument hijackerDoc = new XmlDocument();
+            hijackerDoc.Load(hijackConfigurationParameter);
+
+            string identify = Utility.GetAttributeValue(hijackerDoc.LastChild, "Name");
+            Utility.MergeXml(xml, hijackerDoc, string.Format("//Sheet[@name='{0}']", identify), onlyAttribute);
+            //if (parameter.StartsWith("-forceEnable"))
+            //{
+            //    string hijackSheetNameText = parameter.Replace("-forceEnable=", string.Empty);
+            //    string[] hijackSheetNames = hijackSheetNameText.Split(',');
+            //    foreach (string name in hijackSheetNames)
+            //    {
+            //        foreach (SheetConfig sc in this.Config.Sheets)
+            //        {
+            //            if (sc.Name == name)
+            //            {
+            //                sc.Enabled = true;
+            //                break;
+            //            }
+            //        }
+            //    }
+            //}
+        }
         public void Read(string configFileName)
+        {
+            Read(configFileName, string.Empty, false);
+        }
+
+        public void Read(string configFileName, string hijackConfigurationParameter, bool onlyAttributeIfHijack)
         {
             XmlDocument xml = new XmlDocument();
             xml.Load(configFileName);
+
+            if (!string.IsNullOrEmpty(hijackConfigurationParameter))
+            {
+                HijackConfiguration(xml, hijackConfigurationParameter, onlyAttributeIfHijack);
+            }
+
             XmlNodeList xnlRoot = xml.SelectNodes("//Document");
             if (xnlRoot.Count != 1)
                 throw new Exception("There should be one (and only one) <document> section defined");

@@ -11,6 +11,31 @@ namespace RCG
 {
     public static class Utility
     {
+        public static void MergeXml(XmlDocument baselineDoc, XmlDocument snippetDoc, string commonNodeXPathExpression, bool onlyAttribute)
+        {
+            XmlElement xeOri = (XmlElement)baselineDoc.SelectSingleNode(commonNodeXPathExpression);
+            XmlElement xeNew = (XmlElement)snippetDoc.SelectSingleNode(commonNodeXPathExpression);
+
+            foreach (XmlAttribute attrNew in xeNew.Attributes)
+            {
+                XmlAttribute findAttri = null;
+                foreach (XmlAttribute attrToBeReplaced in xeOri.Attributes)
+                {
+                    if (attrToBeReplaced.Name == attrNew.Name)
+                    {
+                        findAttri = attrToBeReplaced;
+                        break;
+                    }
+                }
+                if (findAttri != null)
+                {
+                    findAttri.Value = attrNew.Value;
+                }
+            }
+            if (!onlyAttribute)
+                xeOri.InnerXml = xeNew.InnerXml;
+        }
+
         public static void ParseFileTypeConfig(string fileTypeConfig, out string fileType, out SearchOption searchOption)
         {
             string[] r = fileTypeConfig.Split(new char[] {'(', ')'}, StringSplitOptions.RemoveEmptyEntries);

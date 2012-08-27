@@ -98,22 +98,14 @@ namespace RCG
         /// Reads the configuration within "Mappings.xml"
         /// </summary>
         /// <param name="configFileName"></param>
-        public void ReadConfiguration(string configFileName, string hijackSheetEnableParameter)
+        public void ReadConfiguration(string configFileName, string hijackConfigurationParameter, bool onlyAttributeIfHijack)
         {
-            _config.Read(configFileName);
-            if (!string.IsNullOrEmpty(hijackSheetEnableParameter))
-            {
-                this.HijackConfiguration(hijackSheetEnableParameter);
-            }
+            _config.Read(configFileName, hijackConfigurationParameter, onlyAttributeIfHijack);
+            //if (!string.IsNullOrEmpty(hijackConfigurationParameter))
+            //{
+            //    this.HijackConfiguration(hijackConfigurationParameter);
+            //}
             _config.Validate();
-        }
-        public void ReadConfiguration(string configFileName)
-        {
-            ReadConfiguration(configFileName, string.Empty);
-        }
-        public void ReadConfiguration()
-        {
-            ReadConfiguration("Mappings.xml");
         }
 
         /// <summary>
@@ -199,13 +191,16 @@ namespace RCG
             }
             string[] dirList = null;
 
+            // Checks whether the path is valid or not. If not exists, just skip it, since 
             if (string.IsNullOrEmpty(sPath) || !Directory.Exists(sPath))
                 return;
 
+            // Include folder indicates the metadata generation is based on Folder.
             if (locationConfig.IncludeFolder)
             {
                 dirList = Directory.GetDirectories(sPath);
             }
+            // The metadata generationis based on file.
             else
             {
                 DirectoryInfo di = new DirectoryInfo(sPath);
@@ -221,6 +216,7 @@ namespace RCG
                 }
                 dirList = sCollection.ToArray();
             }
+            // Read metadata
             foreach (string dir in dirList)
             {
                 DirectoryInfo d = new DirectoryInfo(dir);
@@ -999,26 +995,6 @@ namespace RCG
         public event EventHandler<DataRowEventArgs> OnWritingDataRow;
 
         #endregion
-
-        private void HijackConfiguration(string parameter)
-        {
-            if (parameter.StartsWith("-forceEnable"))
-            {
-                string hijackSheetNameText = parameter.Replace("-forceEnable=", string.Empty);
-                string[] hijackSheetNames = hijackSheetNameText.Split(',');
-                foreach (string name in hijackSheetNames)
-                {
-                    foreach (SheetConfig sc in this.Config.Sheets)
-                    {
-                        if (sc.Name == name)
-                        {
-                            sc.Enabled = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
     }
 
     public class HandlableExceptionEventArgs : EventArgs

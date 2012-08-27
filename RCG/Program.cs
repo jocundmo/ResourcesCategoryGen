@@ -69,13 +69,20 @@ namespace RCG
         static MessageLogger logger = new MessageLogger(string.Format("RCG_log_{0}.txt", DateTime.Now.ToString("yyyyMMdd-HHmmss")));
 
         // RCG.exe -forceEnable=高清电影,游戏
+        // RCG.exe HD_Movies_Mappings.xml true
         static void Main(string[] args)
         {
+            args = new string[2];
+            args[0] = "Mappings_HDMovies.xml";
+            args[1] = "true";
+
             string configFileName = "Mappings.xml";
-            string parameter = string.Empty;
+            string hijackConfigurationParameter = string.Empty;
+            bool hijackOnlyAttribute = false;
             if (args != null && args.Length > 0)
             {
-                parameter = args[0].Trim();
+                hijackConfigurationParameter = args[0].Trim();
+                hijackOnlyAttribute = bool.Parse(args[1].Trim());
             }
 
             GenProcessor gp = new GenProcessor();
@@ -91,7 +98,7 @@ namespace RCG
             try
             {
                 logger.LogMessage("[Step 1/5] Reading configuration...");
-                gp.ReadConfiguration(configFileName, parameter);
+                gp.ReadConfiguration(configFileName, hijackConfigurationParameter, hijackOnlyAttribute);
                 
                 logger.LogMessage("[Step 2/5] Generating metadata...");
                 gp.GenerateMetadata();
