@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Text.RegularExpressions;
+using System.IO;
 
 namespace RCG
 {
@@ -35,7 +36,10 @@ namespace RCG
         private void HijackConfiguration(XmlDocument xml, string hijackConfigurationParameter, bool onlyAttribute)
         {
             XmlDocument hijackerDoc = new XmlDocument();
-            hijackerDoc.Load(hijackConfigurationParameter);
+            if (hijackConfigurationParameter.EndsWith(".xml"))
+                hijackerDoc.Load(hijackConfigurationParameter);
+            else
+                hijackerDoc.LoadXml(hijackConfigurationParameter);
 
             string identify = Utility.GetAttributeValue(hijackerDoc.LastChild, "Name");
             Utility.MergeXml(xml, hijackerDoc, string.Format("//Sheet[@name='{0}']", identify), onlyAttribute);

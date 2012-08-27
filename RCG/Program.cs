@@ -73,14 +73,18 @@ namespace RCG
         static void Main(string[] args)
         {
             //args = new string[2];
-            //args[0] = "Mappings_HDMovies.xml";
+            //args[0] = "<Sheet name='游戏' enabled='true' mode='append' maxRowCount='1000'></Sheet>";
             //args[1] = "true";
 
             string configFileName = "Mappings.xml";
             string hijackConfigurationParameter = string.Empty;
             bool hijackOnlyAttribute = false;
-            if (args != null && args.Length > 0)
+            if (args != null && args.Length > 1)
             {
+                logger.LogMessage(string.Format("Arguments print: {0}", args[0]));
+                logger.LogMessage(string.Format("Arguments print: {0}", args[1]));
+
+                //logger.LogMessage("Reading excel row: " + e.RowProcessing[int.Parse(e.KeyMessage)].ToString() + "...");
                 hijackConfigurationParameter = args[0].Trim();
                 hijackOnlyAttribute = bool.Parse(args[1].Trim());
             }
