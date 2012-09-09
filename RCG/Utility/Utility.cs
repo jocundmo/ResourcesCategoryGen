@@ -63,23 +63,62 @@ namespace RCG
             return string.Empty;
         }
 
-        public static LocationType GetLocationType(string path)
+        public static LocationType GetLocationType(string path, ref string value)
         {
             LocationType r = LocationType.Unknown;
 
-            if (Regex.IsMatch(path, @"^[A-Za-z]:\\")) // e.g.  c:\
-                r = LocationType.Physical;
-            else if (Regex.IsMatch(path, @"^\\\\\d{1,3}?\.\d{1,3}\.\d{1,3}\.\d{1,3}\\")) // e.g. \\192.168.2.165\
-                r = LocationType.Network;
-            else if (Regex.IsMatch(path, @"\\\\[A-Za-z0-9]+\\")) // e.g. \\rabook\
-                r = LocationType.Network;
-            else if (Regex.IsMatch(path, @"^[\w\d ]+\\")) // e.g. 808G_01\
-                r = LocationType.VolumeLabel;
+            Match m = null;
+            m = Regex.Match(path, @"^[A-Za-z]:\\");
+            if (m.Groups.Count > 0 && m.Groups[0].Value != string.Empty)
+            {
+                value = m.Groups[0].Value;
+                return LocationType.Physical;
+            }
+            m = Regex.Match(path, @"^\\\\\d{1,3}?\.\d{1,3}\.\d{1,3}\.\d{1,3}\\");
+            if (m.Groups.Count > 0 && m.Groups[0].Value != string.Empty)
+            {
+                m = Regex.Match(path, @"^\\\\\d{1,3}?\.\d{1,3}\.\d{1,3}\.\d{1,3}\\([A-Za-z0-9_-]+)\\");
+                if (m.Groups.Count == 1)
+                    value = m.Groups[0].ToString().Trim();
+                else
+                    value = m.Groups[m.Groups.Count - 1].ToString().Trim();
+                //value = m.Groups[0].Value;
+                return LocationType.Network;
+            }
+            m = Regex.Match(path, @"^\\\\[A-Za-z0-9]+\\");
+            if (m.Groups.Count > 0 && m.Groups[0].Value != string.Empty)
+            {
+                m = Regex.Match(path, @"^\\\\[A-Za-z0-9]+\\([A-Za-z0-9_-]+)\\");
+                if (m.Groups.Count == 1)
+                    value = m.Groups[0].ToString().Trim();
+                else
+                    value = m.Groups[m.Groups.Count - 1].ToString().Trim();
+                return LocationType.Network;
+            }
+            m = Regex.Match(path, @"^[\w\d ]+\\");
+            if (m.Groups.Count > 0 && m.Groups[0].Value != string.Empty)
+            {
+                value = m.Groups[0].Value;
+                return LocationType.VolumeLabel;
+            }
+            //if (Regex.IsMatch(path, @"^[A-Za-z]:\\")) // e.g.  c:\
+            //    r = LocationType.Physical;
+            //else if (Regex.IsMatch(path, @"^\\\\\d{1,3}?\.\d{1,3}\.\d{1,3}\.\d{1,3}\\")) // e.g. \\192.168.2.165\
+            //    r = LocationType.Network;
+            //else if (Regex.IsMatch(path, @"\\\\[A-Za-z0-9]+\\")) // e.g. \\rabook\
+            //    r = LocationType.Network;
+            //else if (Regex.IsMatch(path, @"^[\w\d ]+\\")) // e.g. 808G_01\
+            //    r = LocationType.VolumeLabel;
 
             if (r == LocationType.Unknown)
                 throw new Exception(string.Format("Input path {0} is not recognized...", path));
 
             return r;
+        }
+        public static LocationType GetLocationType(string path)
+        {
+            string e = string.Empty;
+            return GetLocationType(path, ref e);
         }
 
         public static void CalFolderSize(ref long size, ref int fileCount, ref int subFolderCount, ref string filesType, DirectoryInfo di)

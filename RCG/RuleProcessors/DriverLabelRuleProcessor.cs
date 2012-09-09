@@ -17,21 +17,26 @@ namespace RCG
             return Utility.GetLocationType(path) == LocationType.Network;
         }
 
-        private string GetNetAddressCategory(string path)
-        {
-            Match m = Regex.Match(path, @"^\\\\\d{1,3}?\.\d{1,3}\.\d{1,3}\.\d{1,3}\\(.*)\\");
-            if (m.Groups.Count == 1)
-                return m.Groups[0].ToString().Trim();
-            else
-                return m.Groups[m.Groups.Count - 1].ToString().Trim();
-        }
+        //private string GetNetAddressCategory(string path)
+        //{
+        //    Match m1 = Regex.Match(path, @"^\\\\\d{1,3}?\.\d{1,3}\.\d{1,3}\.\d{1,3}\\(.*)\\");
+        //    if (m1.Groups.Count == 1)
+        //        return m1.Groups[0].ToString().Trim();
+        //    else
+        //        return m1.Groups[m1.Groups.Count - 1].ToString().Trim();
+        //}
 
         public override string Process(string source)
         {
             base.PreProcess(source);
 
             if (IsNetAddress(source))
-                return GetNetAddressCategory(source);
+            {
+                string value = string.Empty;
+                Utility.GetLocationType(source, ref value);
+                return value;
+                //return GetNetAddressCategory(source);
+            }
             else
             {
                 DriveInfo drive = new DriveInfo(Path.GetPathRoot(source));
