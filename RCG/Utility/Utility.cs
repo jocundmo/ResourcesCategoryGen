@@ -255,5 +255,18 @@ namespace RCG
             //    return defaultValue;
         }
 
+
+        internal static DataRow FindSameRow(DataRow row, DataTable tableExcel)
+        {
+            foreach (DataRow dr in tableExcel.Rows)
+            {
+                string primaryKey = (string)dr[(int)dr[Constants.COLUMN_PrimaryColumnIndex]];
+                if (primaryKey == (string)row[(int)row[Constants.COLUMN_PrimaryColumnIndex]])
+                {
+                    return dr;
+                }
+            }
+            return null;
+        }
     }
 }

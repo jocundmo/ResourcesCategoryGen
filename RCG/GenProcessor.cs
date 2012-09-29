@@ -333,6 +333,12 @@ namespace RCG
                                     if ((string)dr[Constants.COLUMN_RowMode] == Constants.ROW_MODE_Filtered)
                                         continue;
 
+                                    if ((string)dr[Constants.COLUMN_RowMode] == Constants.ROW_MODE_Update)
+                                    {
+                                        DataRow sameRow = Utility.FindSameRow(dr, tableExcel);
+                                        tableExcel.Rows.Remove(sameRow);
+                                        rowIndex--;
+                                    }
                                     rowIndex++;
                                     DataRow newRow = tableExcel.NewRow();
 
@@ -465,7 +471,6 @@ namespace RCG
                 int autoIncreaseNumber = 0;
 
                 // Check deleted status
-                //IFormatter deletedItemFormatter = null;
                 FormatterConfig deletedItemFormatterConfig = GetDeletedItemFormatter(sheetConfig.Name);
                 
                 foreach (DataRow dr in _excelSet.Tables[sheetConfig.Name].Rows)
@@ -827,11 +832,12 @@ namespace RCG
                 int timestampColumnIndexOfExcel = GetTimestampExcelColumnIndex(dr);
                 int timestampColumnIndexOfDatatable = GetTimestampDataColumnIndex(dr);
 
+                bool isDeletedBefore = (string)Utility.FindExcelTable(_excelSet, dr.Table.TableName).Rows[rowIndexOfExcel][Constants.COLUMN_RowMode] == Constants.ROW_MODE_Deleted;
                 DateTime dtOfExcel = DateTime.Parse((string)Utility.FindExcelTable(_excelSet, dr.Table.TableName).Rows[rowIndexOfExcel][timestampColumnIndexOfExcel]);
                 DateTime dtOfDatatable = DateTime.Parse(dr[timestampColumnIndexOfDatatable].ToString());
 
                 bool isExpires = dtOfDatatable > dtOfExcel;
-                if (isExpires)
+                if (isExpires || isDeletedBefore)
                 {
                     Cache.Instance.SetDataRowExistsOrExpiresDictCacheValue(dr.Table.TableName, (string)dr[primaryColumnIndexOfDatatable], DataRowExistsOrExpires.ExistsAndExpires);
                     return DataRowExistsOrExpires.ExistsAndExpires; // Exists and Expires
