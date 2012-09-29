@@ -21,6 +21,7 @@ namespace RCG
         ForeColor = 1,
         BackColor = 2,
         FontBold = 4,
-        FontItalic = 8
+        FontItalic = 8,
+        FontStrikethrough = 16
     }
 }

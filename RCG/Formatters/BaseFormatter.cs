@@ -18,6 +18,7 @@ namespace RCG
         public Color BackColor { get; protected set; }
         public bool FontBold { get; protected set; }
         public bool FontItalic { get; protected set; }
+        public bool FontStrikethrough { get; protected set; }
 
         protected BaseFormatter(GenProcessor engine)
         {
@@ -32,6 +33,7 @@ namespace RCG
             this.ForeColor = Color.Black;
             this.FontBold = false;
             this.FontItalic = false;
+            this.FontStrikethrough = false;
         }
 
         protected void ParseFormatString(string formatString)
@@ -71,6 +73,10 @@ namespace RCG
                         this.FormaterType = this.FormaterType | FormatTypes.FontItalic;
                         FontItalic = true;
                         break;
+                    case "font-strikethrough":
+                        this.FormaterType = this.FormaterType | FormatTypes.FontStrikethrough;
+                        FontStrikethrough = true;
+                        break;
                     default:
                         throw new ArgumentException(string.Format("Not support format style {0} ...", colorPattern));
                 }
@@ -107,6 +113,8 @@ namespace RCG
                 ExcelOperationWrapper.SetRowFontBold(Engine.CurrentActiveExcelSheet, currentExcelRowIndex, true);
             if (this.FormaterType.HasFlag(FormatTypes.FontItalic))
                 ExcelOperationWrapper.SetRowFontItalic(Engine.CurrentActiveExcelSheet, currentExcelRowIndex, true);
+            if (this.FormaterType.HasFlag(FormatTypes.FontStrikethrough))
+                ExcelOperationWrapper.SetRowFontStrikethrough(Engine.CurrentActiveExcelSheet, currentExcelRowIndex, true);
         }
 
         public override string ToString()
@@ -129,5 +137,6 @@ namespace RCG
         {
             writer.WriteValue(this._formatString);
         }
+
     }
 }

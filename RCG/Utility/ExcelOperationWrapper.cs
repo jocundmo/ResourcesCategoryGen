@@ -95,9 +95,22 @@ namespace RCG
                Excel.XlFormatConditionOperator.xlEqual, true,
                Type.Missing);
             fd.Font.Italic = flag;
+            
             //fd.StopIfTrue = false;
         }
-
+        public static void SetRowFontStrikethrough(dynamic sheet, int rowIndex, bool flag)
+        {
+            Excel.Range range = sheet.Range(string.Format("{0}:{0}", rowIndex));
+            dynamic fd;
+            if (range.FormatConditions.Count > 0)
+                fd = range.FormatConditions[1];
+            else
+                fd =
+               (Excel.FormatCondition)range.FormatConditions.Add(Excel.XlFormatConditionType.xlExpression,
+               Excel.XlFormatConditionOperator.xlEqual, true,
+               Type.Missing);
+            fd.Font.Strikethrough = flag;
+        }
         public static dynamic FindExcelActiveSheet(Excel.Application excel, string sheetName)
         {
             dynamic activeSheet = FindExcelSheet(excel, sheetName);

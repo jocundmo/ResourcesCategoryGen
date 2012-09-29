@@ -34,7 +34,6 @@ namespace RCG
         private DataSet _excelSet = new DataSet();
         private DataSet _combinedSet = null;
         private Excel.Application _excel;
-        //private List<string> _excelPrimaryColumnList = new List<string>();
         public List<string> _metadataPrimaryColumnList = new List<string>();
         #endregion
 
@@ -401,7 +400,6 @@ namespace RCG
                 if (!File.Exists(filename + "." + sheetConfig.Name + ".xsd"))
                 {
                     DataTable metadataTable = Utility.FindMetadataTable(_metadataSet, sheetConfig.Name);
-                    //SetupOutputTableSchema(metadataTable, sheetConfig);
 
                     metadataTable.WriteXmlSchema(filename + "." + sheetConfig.Name + ".xsd");
                 }
@@ -425,7 +423,6 @@ namespace RCG
                     if (File.Exists(contentFilePath))
                     {
                         excelDt.ReadXml(contentFilePath);
-                        //_excelPrimaryColumnList = EstablishList(excelDt);
                     }
 
                     _excelSet.Tables.Add(excelDt);
@@ -441,19 +438,6 @@ namespace RCG
             //    _excelSet.ReadXml(filename);
             //}
         }
-
-        //private List<string> EstablishList(DataTable excelDt)
-        //{
-        //    List<string> rt = new List<string>();
-
-        //    foreach (DataRow dr in excelDt.Rows)
-        //    {
-        //        int primaryColumnIndex = (int)dr[Constants.COLUMN_PrimaryColumnIndex];
-        //        rt.Add((string)dr[primaryColumnIndex]);
-        //    }
-
-        //    return rt;
-        //}
 
         private static void SetupOutputTableSchema(DataTable metadataTable, SheetConfig sheetConfig)
         {
@@ -476,7 +460,6 @@ namespace RCG
 
                 // Fill output table content by reading row by row from metadata.
                 DataTable metadataTable = Utility.FindMetadataTable(_metadataSet, sheetConfig.Name);
-                //SetupOutputTableSchema(metadataTable, sheetConfig);
 
                 int rowIndex = -1;
                 int autoIncreaseNumber = 0;
@@ -596,7 +579,6 @@ namespace RCG
                                     metadataRow[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Update;
                             }
                         }
-
                         
                         #endregion
 
@@ -629,7 +611,7 @@ namespace RCG
 
             foreach (FormatterConfig formatterConfig in sheetConfig.Formatters)
             {
-                if (formatterConfig.Rule == "_*static.deleted*_")
+                if (string.Compare(formatterConfig.Rule.Trim(), Constants.FORMATTER_Internal_DeletedItem, true) == 0)
                 {
                     return formatterConfig;
                 }

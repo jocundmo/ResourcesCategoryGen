@@ -183,7 +183,6 @@ namespace RCG
         {
             return Regex.IsMatch(path, "_.*?_");
         }
-
         public static bool IsValidExtractFrom(string path)
         {
             bool valid = true;
