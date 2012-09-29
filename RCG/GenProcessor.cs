@@ -336,30 +336,47 @@ namespace RCG
                                     if ((string)dr[Constants.COLUMN_RowMode] == Constants.ROW_MODE_Update)
                                     {
                                         DataRow sameRow = Utility.FindSameRow(dr, tableExcel);
-                                        tableExcel.Rows.Remove(sameRow);
-                                        rowIndex--;
-                                    }
-                                    rowIndex++;
-                                    DataRow newRow = tableExcel.NewRow();
-
-                                    #region Special columns that should not be moved from existing table directly
-
-                                    #region Auto increased column
-                                    for (int i = 0; i < tableMetadata.Columns.Count; i++)
-                                    {
-
-                                        foreach (string index in autoIncreasedColumnIndexes)
+                                        Dictionary<int, int> keptAutoIncreasedIndexes = GetAllAutoIncreasedIndexesValue(sameRow, autoIncreasedColumnIndexes);
+                                        int index = tableExcel.Rows.IndexOf(sameRow);
+                                        tableExcel.Rows.RemoveAt(index);
+                                        DataRow newRow2 = tableExcel.NewRow();
+                                        #region Set auto increased column & value
+                                        for (int i = 0; i < tableMetadata.Columns.Count; i++)
                                         {
-                                            if (int.Parse(index) == i)
-                                                newRow[i] = rowIndex;
-                                            else
-                                                newRow[i] = dr[i];
+                                            newRow2[i] = dr[i];// copy the value to new row.
                                         }
+                                        foreach (KeyValuePair<int, int> kvp in keptAutoIncreasedIndexes)
+                                        {
+                                            newRow2[kvp.Key] = kvp.Value;
+                                        }
+                                        #endregion
+                                        tableExcel.Rows.InsertAt(newRow2, index);
                                     }
-                                    #endregion
+                                    else
+                                    {
+                                        rowIndex++;
+                                        DataRow newRow = tableExcel.NewRow();
 
-                                    #endregion
-                                    tableExcel.Rows.Add(newRow);
+                                        #region Special columns that should not be moved from existing table directly
+
+                                        #region Set auto increased column & value
+                                        for (int i = 0; i < tableMetadata.Columns.Count; i++)
+                                        {
+
+                                            foreach (string index in autoIncreasedColumnIndexes)
+                                            {
+                                                if (int.Parse(index) == i) // if is the auto increased column.
+                                                    newRow[i] = rowIndex;
+                                                else
+                                                    newRow[i] = dr[i]; // else just copy the original value.
+                                            }
+                                        }
+                                        #endregion
+
+                                        #endregion
+
+                                        tableExcel.Rows.Add(newRow);
+                                    }
                                 }
                             }
                             datasetToExecute.Tables.Add(tableExcel.Copy());
@@ -378,6 +395,21 @@ namespace RCG
                 _combinedSet = datasetToExecute;
             }
             return _combinedSet;
+        }
+
+        private Dictionary<int, int> GetAllAutoIncreasedIndexesValue(DataRow sameRow, string[] autoIncreasedColumnIndexes)
+        {
+            Dictionary<int, int> rt = new Dictionary<int, int>(); // Dictionary<ColumnIndex, Value>
+            for (int i = 0; i < sameRow.Table.Columns.Count; i++)
+            {
+                foreach (string index in autoIncreasedColumnIndexes)
+                {
+                    if (int.Parse(index) == i)
+                        rt[int.Parse(index)] = int.Parse((string)sameRow[i]);
+                        //rt.Add(int.Parse((string)sameRow[i]));
+                }
+            }
+            return rt;
         }
 
         public void OutputTemporaryFiles(string filename)
