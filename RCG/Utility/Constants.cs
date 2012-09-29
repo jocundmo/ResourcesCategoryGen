@@ -26,6 +26,7 @@ namespace RCG
         public const string COLUMN_TimestampColumnIndex = "_*TimestampColumnIndex*_";
         public const string COLUMN_OutputColumnIndex = "_*OutputColumnIndex*_";
         public const string COLUMN_AutoIncreaseColumnIndex = "_*AutoIncreaseColumnIndex*_";
+        public static string COLUMN_LocationFrom = "_*LocationFrom*_";
 
         public const int HEADER_ROW_INDEX = 1;
 
@@ -37,6 +38,8 @@ namespace RCG
         public const string ROW_MODE_Append = "append";
         public const string ROW_MODE_Update = "update";
         public const string ROW_MODE_Refresh = "refresh";
+        public const string ROW_MODE_Deleted = "deleted";
+
     }
 
     public enum LocationType

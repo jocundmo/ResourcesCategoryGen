@@ -8,13 +8,15 @@ namespace RCG
 {
     public class LocationConfig
     {
+        public string Name { get; set; }
         public string Path { get; set; }
         public bool Enabled { get; set; }
         public bool IncludeFolder { get; set; }
         public Collection<FileTypeConfig> IncludeFileTypes { get; private set; }
 
-        public LocationConfig(string path, bool enabled, bool includeFolder)
+        public LocationConfig(string name, string path, bool enabled, bool includeFolder)
         {
+            this.Name = name;
             this.Path = path;
             this.Enabled = enabled;
             this.IncludeFolder = includeFolder;
@@ -22,13 +24,13 @@ namespace RCG
         }
 
         public LocationConfig()
-            : this (string.Empty, true, true)
+            : this (string.Empty, string.Empty, true, true)
         {
             // Nothing to do.
         }
 
         public LocationConfig(string path)
-            : this(path, true, true)
+            : this(path, path, true, true)
         {
             // Nothing to do.
         }

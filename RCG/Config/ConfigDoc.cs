@@ -145,6 +145,7 @@ namespace RCG
                 foreach (XmlElement xeLocation in xnlLocations)
                 {
                     locationConfig = new LocationConfig();
+                    locationConfig.Name = Utility.GetAttributeValue(xeLocation, "name");
                     locationConfig.Path = Utility.GetAttributeValue(xeLocation, "path");
                     string include = Utility.GetAttributeValue(xeLocation, "include", "folder");
                     locationConfig.IncludeFolder = (include == "Folder" || include == "folder");

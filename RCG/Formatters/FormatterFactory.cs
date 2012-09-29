@@ -43,6 +43,11 @@ namespace RCG
                     formatter.Rule = rule;
                     formatter.FormatString = formatString;
                     break;
+                case "DeletedItemFormatter":
+                    formatter = DeletedItemFormatter.CreateNewProcessor(engine) as IFormatter;
+                    formatter.Rule = rule;
+                    formatter.FormatString = formatString;
+                    break;
                 default:
                     throw new Exception(string.Format("Formatter {0} is not recognized", formatterType));
             }

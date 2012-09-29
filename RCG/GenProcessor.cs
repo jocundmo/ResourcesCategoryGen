@@ -34,7 +34,8 @@ namespace RCG
         private DataSet _excelSet = new DataSet();
         private DataSet _combinedSet = null;
         private Excel.Application _excel;
-
+        //private List<string> _excelPrimaryColumnList = new List<string>();
+        public List<string> _metadataPrimaryColumnList = new List<string>();
         #endregion
 
         #region Properties
@@ -113,6 +114,7 @@ namespace RCG
         /// </summary>
         public void GenerateMetadata()
         {
+            _metadataPrimaryColumnList.Clear();
             foreach (SheetConfig sheetConfig in _config.Sheets)
             {
                 if (!sheetConfig.Enabled)
@@ -157,7 +159,10 @@ namespace RCG
                 dt.Columns.Add(dcOutputColumnIndex);
                 DataColumn dcAutoIncreaseColumnIndex = new DataColumn(Constants.COLUMN_AutoIncreaseColumnIndex, typeof(string));
                 dt.Columns.Add(dcAutoIncreaseColumnIndex);
+                DataColumn dcLocationFrom = new DataColumn(Constants.COLUMN_LocationFrom, typeof(string));
+                dt.Columns.Add(dcLocationFrom);
 
+                SetupOutputTableSchema(dt, sheetConfig);
                 // Read metadata.
                 foreach (LocationConfig locationConfig in sheetConfig.Locations)
                 {
@@ -221,10 +226,10 @@ namespace RCG
             {
                 DirectoryInfo d = new DirectoryInfo(dir);
                 DataRow dr = dt.NewRow();
-
                 dr[Constants.COLUMN_Path] = dir;
                 dr[Constants.COLUMN_LastModified] = d.LastWriteTime.ToString();
                 dr[Constants.COLUMN_Attributes] = d.Attributes.ToString();
+                dr[Constants.COLUMN_LocationFrom] = locationConfig.Name;
 
                 long size = 0;
                 int fileCount = 0;
@@ -259,8 +264,26 @@ namespace RCG
                 if (OnReadingMetadata != null)
                     OnReadingMetadata(this, new DataRowEventArgs(dr, dir));
 
+                int columnIndex = -1;
+                foreach (DataColumn dc in dt.Columns)
+                {
+                    columnIndex++;
+                    if (Utility.IsExtractFromMetadata(dc.ColumnName))
+                        continue;
+                    ColumnConfig columnConfig = FindColumnConfig(_config, dt.TableName, dc.ColumnName);
+                    SetSpecialColumnIndex(columnConfig, columnIndex, dr);
+                }
+
                 dt.Rows.Add(dr);
+
+                AppendToList(dr, _metadataPrimaryColumnList);
+
             }
+        }
+
+        private void AppendToList(DataRow dr, List<string> list)
+        {
+            list.Add((string)dr[Constants.COLUMN_Path]);
         }
 
         private DataSet CombineMetadataExcelDataset()
@@ -288,8 +311,9 @@ namespace RCG
                             int nonFilteredRowsCount = 0;
                             foreach (DataRow dr in tableExcel.Rows)
                             {
-                                #region Formatter column should be erased
-                                dr[Constants.COLUMN_Formatter] = string.Empty;
+                                #region Formatter column should be erased excepet deleted formatter
+                                if ((string)dr[Constants.COLUMN_Formatter] != GetDeletedItemFormatter(table.TableName).Token)
+                                    dr[Constants.COLUMN_Formatter] = string.Empty;
                                 #endregion
 
                                 if (!(bool)dr[Constants.COLUMN_FilterFlag])
@@ -377,7 +401,7 @@ namespace RCG
                 if (!File.Exists(filename + "." + sheetConfig.Name + ".xsd"))
                 {
                     DataTable metadataTable = Utility.FindMetadataTable(_metadataSet, sheetConfig.Name);
-                    SetupOutputTableSchema(metadataTable, sheetConfig);
+                    //SetupOutputTableSchema(metadataTable, sheetConfig);
 
                     metadataTable.WriteXmlSchema(filename + "." + sheetConfig.Name + ".xsd");
                 }
@@ -399,7 +423,10 @@ namespace RCG
                     // Read content.
                     string contentFilePath = filename + "." + sheetConfig.Name + ".xml";
                     if (File.Exists(contentFilePath))
+                    {
                         excelDt.ReadXml(contentFilePath);
+                        //_excelPrimaryColumnList = EstablishList(excelDt);
+                    }
 
                     _excelSet.Tables.Add(excelDt);
                 }
@@ -415,6 +442,19 @@ namespace RCG
             //}
         }
 
+        //private List<string> EstablishList(DataTable excelDt)
+        //{
+        //    List<string> rt = new List<string>();
+
+        //    foreach (DataRow dr in excelDt.Rows)
+        //    {
+        //        int primaryColumnIndex = (int)dr[Constants.COLUMN_PrimaryColumnIndex];
+        //        rt.Add((string)dr[primaryColumnIndex]);
+        //    }
+
+        //    return rt;
+        //}
+
         private static void SetupOutputTableSchema(DataTable metadataTable, SheetConfig sheetConfig)
         {
             foreach (ColumnConfig column in sheetConfig.Columns)
@@ -424,7 +464,6 @@ namespace RCG
                 metadataTable.Columns.Add(new DataColumn(column.DisplayName));
             }
         }
-
         public void ProcessMetadataTable()
         {
             foreach (SheetConfig sheetConfig in _config.Sheets)
@@ -437,10 +476,32 @@ namespace RCG
 
                 // Fill output table content by reading row by row from metadata.
                 DataTable metadataTable = Utility.FindMetadataTable(_metadataSet, sheetConfig.Name);
-                SetupOutputTableSchema(metadataTable, sheetConfig);
+                //SetupOutputTableSchema(metadataTable, sheetConfig);
 
                 int rowIndex = -1;
                 int autoIncreaseNumber = 0;
+
+                // Check deleted status
+                //IFormatter deletedItemFormatter = null;
+                FormatterConfig deletedItemFormatterConfig = GetDeletedItemFormatter(sheetConfig.Name);
+                
+                foreach (DataRow dr in _excelSet.Tables[sheetConfig.Name].Rows)
+                {
+                    foreach (LocationConfig locationConfig in sheetConfig.Locations)
+                    {
+                        if (!locationConfig.Enabled) continue;
+
+                        if (string.Compare((string)dr[Constants.COLUMN_LocationFrom], locationConfig.Name.Trim(), true) == 0)
+                        {
+                            if (!_metadataPrimaryColumnList.Contains((string)dr[Constants.COLUMN_Path]))
+                            {
+                                dr[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Deleted;
+                                dr[Constants.COLUMN_Formatter] = deletedItemFormatterConfig.Token;
+                            }
+                        }
+                    }
+                }
+
                 foreach (DataRow metadataRow in metadataTable.Rows)
                 {
                     rowIndex++;
@@ -487,14 +548,8 @@ namespace RCG
                             CurrentColumnConfig = columnConfig;
 
                             #region Set the special columns index
-                            if (columnConfig.Primary)
-                                metadataRow[Constants.COLUMN_PrimaryColumnIndex] = columnIndex;
-                            if (columnConfig.Timestamp)
-                                metadataRow[Constants.COLUMN_TimestampColumnIndex] = columnIndex;
-                            if (columnConfig.Output)
-                                metadataRow[Constants.COLUMN_OutputColumnIndex] += string.Format("{0},", columnIndex);
-                            if (columnConfig.ExtractFrom == Constants.PREDEFINED_AutoIncrease)
-                                metadataRow[Constants.COLUMN_AutoIncreaseColumnIndex] += string.Format("{0},", columnIndex);
+                            //SetSpecialColumnIndex(columnConfig, columnIndex, metadataRow);
+                            
                             #endregion
 
                             // Predefined column like auto increased column shall be handled specifically here.
@@ -542,6 +597,7 @@ namespace RCG
                             }
                         }
 
+                        
                         #endregion
 
                         #region Formatter
@@ -565,6 +621,32 @@ namespace RCG
                     }
                 }
             }
+        }
+
+        private FormatterConfig GetDeletedItemFormatter(string sheetName)
+        {
+            SheetConfig sheetConfig = FindSheetConfig(_config, sheetName);
+
+            foreach (FormatterConfig formatterConfig in sheetConfig.Formatters)
+            {
+                if (formatterConfig.Rule == "_*static.deleted*_")
+                {
+                    return formatterConfig;
+                }
+            }
+            throw new Exception(string.Format("Required deleted formatter..."));
+        }
+
+        private static void SetSpecialColumnIndex(ColumnConfig columnConfig, int columnIndex, DataRow metadataRow)
+        {
+            if (columnConfig.Primary)
+                metadataRow[Constants.COLUMN_PrimaryColumnIndex] = columnIndex;
+            if (columnConfig.Timestamp)
+                metadataRow[Constants.COLUMN_TimestampColumnIndex] = columnIndex;
+            if (columnConfig.Output)
+                metadataRow[Constants.COLUMN_OutputColumnIndex] += string.Format("{0},", columnIndex);
+            if (columnConfig.ExtractFrom == Constants.PREDEFINED_AutoIncrease)
+                metadataRow[Constants.COLUMN_AutoIncreaseColumnIndex] += string.Format("{0},", columnIndex);
         }
 
         private void InitExcelActiveSheet()
@@ -671,6 +753,11 @@ namespace RCG
                         // First add all the rows which mode is "append" and marked all rows which mode is "update".
                         // Second update all the rows which mode is "update".
                         if (rowMode == Constants.ROW_MODE_Ignored)
+                        {
+                            if (WriteDataRow(row, CurrentActiveExcelSheet, rowIndexToWrite))
+                                rowIndexToWrite++;
+                        }
+                        else if (rowMode == Constants.ROW_MODE_Deleted)
                         {
                             if (WriteDataRow(row, CurrentActiveExcelSheet, rowIndexToWrite))
                                 rowIndexToWrite++;
@@ -995,6 +1082,8 @@ namespace RCG
         public event EventHandler<DataRowEventArgs> OnWritingDataRow;
 
         #endregion
+
+        
     }
 
     public class HandlableExceptionEventArgs : EventArgs

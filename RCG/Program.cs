@@ -75,7 +75,6 @@ namespace RCG
             //args = new string[2];
             //args[0] = "<Sheet name='游戏' enabled='true' mode='append' maxRowCount='1000'></Sheet>";
             //args[1] = "true";
-
             string configFileName = "Mappings.xml";
             string hijackConfigurationParameter = string.Empty;
             bool hijackOnlyAttribute = false;

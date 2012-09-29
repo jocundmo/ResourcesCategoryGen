@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Formatters\DeletedItemFormatter.cs" />
     <Compile Include="Utility\Cache.cs" />
     <Compile Include="Config\ColumnConfig.cs" />
     <Compile Include="Config\FileTypeConfig.cs" />
