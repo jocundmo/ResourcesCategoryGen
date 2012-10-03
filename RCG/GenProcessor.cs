@@ -311,7 +311,9 @@ namespace RCG
                             foreach (DataRow dr in tableExcel.Rows)
                             {
                                 #region Formatter column should be erased excepet deleted formatter
-                                if ((string)dr[Constants.COLUMN_Formatter] != GetDeletedItemFormatter(table.TableName).Token)
+                                string ruleType, rule, formatString;
+                                FormatterConfig.SplitRuleType_Rule_Formatter((string)dr[Constants.COLUMN_Formatter], out ruleType, out rule, out formatString);
+                                if (rule != GetDeletedItemFormatter(table.TableName).Rule)
                                     dr[Constants.COLUMN_Formatter] = string.Empty;
                                 #endregion
 
@@ -502,8 +504,8 @@ namespace RCG
                 int rowIndex = -1;
                 int autoIncreaseNumber = 0;
 
-                // Check deleted status
-                FormatterConfig deletedItemFormatterConfig = GetDeletedItemFormatter(sheetConfig.Name);
+                // Check deleted status ==>
+                //FormatterConfig deletedItemFormatterConfig = GetDeletedItemFormatter(sheetConfig.Name);
                 
                 foreach (DataRow dr in _excelSet.Tables[sheetConfig.Name].Rows)
                 {
@@ -516,12 +518,13 @@ namespace RCG
                             if (!_metadataPrimaryColumnList.Contains((string)dr[Constants.COLUMN_Path]))
                             {
                                 dr[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Deleted;
-                                dr[Constants.COLUMN_Formatter] = deletedItemFormatterConfig.Token;
+                                //dr[Constants.COLUMN_Formatter] = deletedItemFormatterConfig.Token;
+                                dr[Constants.COLUMN_Formatter] = GetDeletedItemFormatter(sheetConfig.Name).Token;
                             }
                         }
                     }
                 }
-
+                // <==
                 foreach (DataRow metadataRow in metadataTable.Rows)
                 {
                     rowIndex++;
@@ -608,12 +611,18 @@ namespace RCG
                             bool isRowExists = (r != DataRowExistsOrExpires.NotExists);
 
                             if (!isRowExists)
+                            {
                                 metadataRow[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Append;
+                                metadataRow[Constants.COLUMN_Formatter] = FormatterConfig.GetDefaultAppendedItemFormatterConfig().Token; // We set default appended format here, and override it with mappings definition later.
+                            }
                             else
                             {
                                 bool isRowExpires = (r == DataRowExistsOrExpires.ExistsAndExpires);
                                 if (isRowExpires)
+                                {
                                     metadataRow[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Update;
+                                    metadataRow[Constants.COLUMN_Formatter] = FormatterConfig.GetDefaultUpdatedItemFormatterConfig().Token; // We set default updated format here, and override it with mappings definition later.
+                                }
                             }
                         }
                         
@@ -648,12 +657,16 @@ namespace RCG
 
             foreach (FormatterConfig formatterConfig in sheetConfig.Formatters)
             {
+                if (!formatterConfig.Enabled)
+                    continue;
+                
                 if (string.Compare(formatterConfig.Rule.Trim(), Constants.FORMATTER_Internal_DeletedItem, true) == 0)
                 {
                     return formatterConfig;
                 }
             }
-            throw new Exception(string.Format("Required deleted formatter..."));
+            // If not defined in Mappings.xml, then use the default config.
+            return FormatterConfig.GetDefaultDeletedItemFormatterConfig();
         }
 
         private static void SetSpecialColumnIndex(ColumnConfig columnConfig, int columnIndex, DataRow metadataRow)
@@ -1044,8 +1057,10 @@ namespace RCG
             if (!string.IsNullOrEmpty(formatterToken))
             {
                 //IFormatter formatter = row[Constants.COLUMN_Formatter] as IFormatter;
-                string[] formatterTokens = formatterToken.Split(new string[] { FormatterConfig.TokenSplitter }, StringSplitOptions.None);
-                IFormatter formatter = FormatterFactory.GetFormatter(formatterTokens[0], formatterTokens[1], formatterTokens[2], this);
+                //string[] formatterTokens = formatterToken.Split(new string[] { FormatterConfig.TokenSplitter }, StringSplitOptions.None);
+                string ruleType, rule, formatString;
+                FormatterConfig.SplitRuleType_Rule_Formatter(formatterToken, out ruleType, out rule, out formatString);
+                IFormatter formatter = FormatterFactory.GetFormatter(ruleType, rule, formatString, this);
                 if (formatter != null)
                     formatter.Execute(realExcelRowIndex);
             }

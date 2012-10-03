@@ -12,11 +12,11 @@
     <Sheets>
         <Sheet name="高清电影" enabled="true" mode="append" maxRowCount="600" refMode="false">
             <Formatters>
-                <Formatter name="append_formatter" extractFrom="" ruleType="AppendedItemFormatter" rule="" formatString="back-color:red;font-bold;font-italic"></Formatter>
-                <Formatter name="update_formatter" extractFrom="" ruleType="UpdatedItemFormatter" rule="" formatString="back-color:darkblue;fore-color:yellow"></Formatter>
+                <Formatter enabled="true" name="append_formatter" extractFrom="" ruleType="AppendedItemFormatter" rule="" formatString="back-color:red;font-bold;font-italic"></Formatter>
+                <Formatter enabled="false" name="update_formatter" extractFrom="" ruleType="UpdatedItemFormatter" rule="" formatString="back-color:darkblue;fore-color:yellow"></Formatter>
                 <Formatter enabled="false" name="refresh_formatter" extractFrom="" ruleType="RefreshedItemFormatter" rule="" formatString="fore-color:red"></Formatter>
-                <Formatter name="duplicated_formatter" extractFrom="中文名" ruleType="DuplicatedItemFormatter" rule="" formatString="back-color:green;fore-color:pink"></Formatter>
-                <Formatter name="deleted_formatter" extractFrom="" ruleType="DeletedItemFormatter" rule="_*static.deleted*_" formatString="font-strikethrough;back-color:black;fore-color:white"></Formatter>
+                <Formatter enabled="false" name="duplicated_formatter" extractFrom="中文名" ruleType="DuplicatedItemFormatter" rule="" formatString="back-color:green;fore-color:pink"></Formatter>
+                <Formatter enabled="false" name="deleted_formatter" extractFrom="" ruleType="DeletedItemFormatter" rule="_*static.deleted*_" formatString="font-strikethrough;back-color:black;fore-color:white"></Formatter>
                 <Formatter enabled="false" name="formatter1" extractFrom="大小(MB)" ruleType="NumberCompareFormatter" rule="less_than:180" formatString="fore-color:green;back-color:red"></Formatter>
             </Formatters>
             <Filters>

@@ -40,7 +40,9 @@ namespace RCG
         public const string ROW_MODE_Refresh = "refresh";
         public const string ROW_MODE_Deleted = "deleted";
 
+        public const string FORMATTER_Internal_AppendedItem = "_*static.appended*_";
         public const string FORMATTER_Internal_DeletedItem = "_*static.deleted*_";
+        public const string FORMATTER_Internal_UpdatedItem = "_*static.updated*_";
     }
 
     public enum LocationType
