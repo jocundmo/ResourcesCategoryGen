@@ -1,12 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <!--    
-        COLUMN_Path = "_Path_";
-        COLUMN_LastModified = "_LastModified_";
-        COLUMN_Size = "_Size_";
-        COLUMN_Attributes = "_Attributes_";
-        COLUMN_FileCount = "_FileCount_";
-        COLUMN_SubFolderCount = "_SubFolderCount_";
-        COLUMN_FromFile = "_FromFile_";
+        [Columns]
+          COLUMN_Path = "_Path_";
+          COLUMN_LastModified = "_LastModified_";
+          COLUMN_Size = "_Size_";
+          COLUMN_Attributes = "_Attributes_";
+          COLUMN_FileCount = "_FileCount_";
+          COLUMN_SubFolderCount = "_SubFolderCount_";
+          COLUMN_FromFile = "_FromFile_";
+          COLUMN_FilesType = "_FilesType_";
+        [Formatters]
+          rule = "_static.appended_"
+          rule = "_static.deleted_"
+          rule = "_static.updated_"
 -->
 <Document templatePath="c:\template.xlsx" baselinePath="c:\mjm.xlsx" backup="true" outputPath="c:\mjm.xlsx">
     <Sheets>
@@ -16,7 +22,7 @@
                 <Formatter enabled="false" name="update_formatter" extractFrom="" ruleType="UpdatedItemFormatter" rule="" formatString="back-color:darkblue;fore-color:yellow"></Formatter>
                 <Formatter enabled="false" name="refresh_formatter" extractFrom="" ruleType="RefreshedItemFormatter" rule="" formatString="fore-color:red"></Formatter>
                 <Formatter enabled="false" name="duplicated_formatter" extractFrom="中文名" ruleType="DuplicatedItemFormatter" rule="" formatString="back-color:green;fore-color:pink"></Formatter>
-                <Formatter enabled="false" name="deleted_formatter" extractFrom="" ruleType="DeletedItemFormatter" rule="_*static.deleted*_" formatString="font-strikethrough;back-color:black;fore-color:white"></Formatter>
+                <Formatter enabled="false" name="deleted_formatter" extractFrom="" ruleType="DeletedItemFormatter" rule="_static.deleted_" formatString="font-strikethrough;back-color:black;fore-color:white"></Formatter>
                 <Formatter enabled="false" name="formatter1" extractFrom="大小(MB)" ruleType="NumberCompareFormatter" rule="less_than:180" formatString="fore-color:green;back-color:red"></Formatter>
             </Formatters>
             <Filters>

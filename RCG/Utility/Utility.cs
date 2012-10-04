@@ -206,18 +206,6 @@ namespace RCG
                     return true;
             }
             return false;
-            //ColumnConfig ccToFound = null;
-            //foreach (ColumnConfig cc in currentSheetConfig.Columns)
-            //{
-            //    if (cc.Enabled && cc.Name == path)
-            //    {
-            //        ccToFound = cc;
-            //        break;
-            //    }
-            //}
-            //if (ccToFound == null)
-            //    throw new Exception(string.Format("Column {0} not found or not enabled", path));
-            //return ccToFound.Output;
         }
 
         public static string GetDataRowContent(DataRow row, string extractFrom)

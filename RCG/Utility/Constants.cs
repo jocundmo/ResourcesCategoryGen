@@ -9,6 +9,8 @@ namespace RCG
     {
         public const int INT_NOT_FOUND_INDEX = -1;
 
+        // Pattern like "_..._" is defined as system internal
+        // Pattern "_..._" could be used in mapping.xml while "_*...*_" is really system internal that cannot be used in configuration.
         public const string PREDEFINED_AutoIncrease = "_AutoIncrease_";
         public const string COLUMN_Path = "_Path_";
         public const string COLUMN_LastModified = "_LastModified_";
@@ -40,9 +42,9 @@ namespace RCG
         public const string ROW_MODE_Refresh = "refresh";
         public const string ROW_MODE_Deleted = "deleted";
 
-        public const string FORMATTER_Internal_AppendedItem = "_*static.appended*_";
-        public const string FORMATTER_Internal_DeletedItem = "_*static.deleted*_";
-        public const string FORMATTER_Internal_UpdatedItem = "_*static.updated*_";
+        public const string FORMATTER_Internal_AppendedItem = "_static.appended_";
+        public const string FORMATTER_Internal_DeletedItem = "_static.deleted_";
+        public const string FORMATTER_Internal_UpdatedItem = "_static.updated_";
     }
 
     public enum LocationType
