@@ -506,8 +506,6 @@ namespace RCG
                 int autoIncreaseNumber = 0;
 
                 // Check deleted status ==>
-                //FormatterConfig deletedItemFormatterConfig = GetDeletedItemFormatter(sheetConfig.Name);
-                
                 foreach (DataRow dr in _excelSet.Tables[sheetConfig.Name].Rows)
                 {
                     foreach (LocationConfig locationConfig in sheetConfig.Locations)
@@ -519,7 +517,7 @@ namespace RCG
                             if (!_metadataPrimaryColumnList.Contains((string)dr[Constants.COLUMN_Path]))
                             {
                                 dr[Constants.COLUMN_RowMode] = Constants.ROW_MODE_Deleted;
-                                //dr[Constants.COLUMN_Formatter] = deletedItemFormatterConfig.Token;
+                                // Please refere to the comment to "GetDeletedItemFormatter"
                                 dr[Constants.COLUMN_Formatter] = GetDeletedItemFormatter(sheetConfig.Name).Token;
                             }
                         }
@@ -652,6 +650,9 @@ namespace RCG
             }
         }
 
+        // The deletedItem formatter is different from appendedItem / updatedItem formatter,
+        // Since deletedItem is based on Existing(Excel) data source while appendedItem / updatedItem are based on New(Metadata) source.
+        // This is the reason we wrap "GetDeletedItemFormatter" here since it cannot get user configured formatter like appendedItem / updatedItem.
         private FormatterConfig GetDeletedItemFormatter(string sheetName)
         {
             SheetConfig sheetConfig = FindSheetConfig(_config, sheetName);
@@ -716,6 +717,7 @@ namespace RCG
                 }
             }
             // Neither baseline nor output exists, use template.
+            // *Baseline is obseleted.
             if (!string.IsNullOrEmpty(_config.TemplatePath.Trim()) &&
                 File.Exists(_config.TemplatePath.Trim()))
                 _excel.Application.Workbooks.Open(_config.TemplatePath.Trim());
