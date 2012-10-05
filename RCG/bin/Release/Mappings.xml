@@ -13,12 +13,89 @@
           rule = "_static.appended_"
           rule = "_static.deleted_"
           rule = "_static.updated_"
+        
+        [Document templatePath="{path}" baselinePath="{path}" backup="{true/false}" outputPath="{path}"] - The root node for configuration, only has one.
+          templatePath = "c:\template.xlsx" - templated doc used to generate. [optional default=""]
+          baselinePath = "c:\mjm.xlsx" - todo... forget [optional default=""]
+          backup = "true" - identify backup the old doc or not. [optional default="true"]
+          outputPath = "c:\mjm.xlsx" - the output path for this generation. [optional default="{DateTime.Now.ToString("yyyyMMdd")}"]
+          
+        [Sheets] - The container for all sheets, only has one.
+        
+        [Sheet name="{string}" enabled="{true/false}" mode="{refresh/append}" maxRowCount="{int}" refMode="{true/false}"]
+          name = "高清电影" [required]
+          enabled = "true" [optional default="true"]
+          mode = "refresh" [optional default="refresh"]
+          maxRowCount = "600" [optional default="3000"]
+          refMode = "false" [optional default="true"] - todo, forget...
+          
+        [Formatters]
+        
+        [Formatter name="{string}" enabled="{true/false}" extractFrom="{string.Empty}" ruleType="{string:ruleType*}" rule="{string:rule*}" formatString="{string:formatString*}"]
+          name = "append_formatter" [required] - not used actually, just a name.
+          enabled = "true" [optional default="true"]
+          extractFrom = "中文名" [required] - From every column defined, allow string.Empty
+          ruleType = "AppendedItemFormatter" [required] - *AppendedItemFormatter
+                                                          *DateTimeCompareFormatter
+                                                          *DeletedItemFormatter
+                                                          *DuplicatedItemFormatter
+                                                          *NumberCompareFormatter
+                                                          *RefreshedItemFormatter
+                                                          *UpdatedItemFormatter
+                                                          <extendable>...
+          rule = "less_than:180" [required] - see more...
+          formatString = "" [required] - see more...
+        
+        [Fileters]
+        
+        [Filter name="{string}" enabled="{true/false}" ruleType="{string:ruleType*}" rule="{string:rule*}" extractFrom="_Path_"]
+          name = "filter_name" [optional] - not used actually, just a name.
+          enabled = "true" [optional default="true"]
+          ruleType = "RegularExpressionFilter" [required] - *ArithmeticRuleProcessor
+                                                            *AutoGenIntRuleProcessor
+                                                            *ConditionalRuleProcessor
+                                                            *DriverLabelRuleProcessor
+                                                            *FilesTypeRuleProcessor
+                                                            *RegularExpressionRuleProcessor
+                                                            *SimpleReplacementRuleProcess
+          rule = "======" [required] - The rule depends the rule type you selected.
+          extractFrom = "_Path_" [required] - From every column defined, including the internal defined with "_..._", allow string.Empty
+        
+        [Locations]
+        
+        [Location name="{string}" enabled="{true/false}" path="{string:path*}" include="{string:include*}"]
+          name = "location_name" [optional] - not used actually, just a name.
+          enabled = "true" [optional default="true"]
+          path = "\\mainframe1601\640G_02\HD.Movies" [required] - *NetworkVolume e.g. \\mainframe1601\640G_02\HD.Movies
+                                                                  *IPLocation e.g. \\192.168.2.165\高清电影02
+                                                                  *LocalDrive e.g. C:\New Folder
+                                                                  *LocalDriveVolume e.g. 2048G_01\07.Movies
+          include = "Folder" [optional default="Folder"] - *Folder
+                                                           *Ant file search pattern e.g. *.mp3
+        [Columns]
+        
+        [Column name="{string}" primary="{true/false}" timestamp="{true/false}" output="{true/false}" hyperlink="{true/false}" enabled="{true/false}" ruleType="{string:ruleType*}" rule="{string:rule*}" extractFrom="_AutoIncrease_"]
+          name = "序号" [required] - !very important, it is the name finally get into the excel.
+          enabled = "true" [optional default="true"]
+          primary = "true" [optional default="false"]
+          timestamp = "true" [optional default="false"]
+          output = "true" [optional default="true"]
+          hyperlink = "false" [optional default="false"]
+          ruleType = "RegularExpressionFilter" [required] - *ArithmeticRuleProcessor
+                                                            *AutoGenIntRuleProcessor
+                                                            *ConditionalRuleProcessor
+                                                            *DriverLabelRuleProcessor
+                                                            *FilesTypeRuleProcessor
+                                                            *RegularExpressionRuleProcessor
+                                                            *SimpleReplacementRuleProcess
+          rule = "======" [required] - The rule depends the rule type you selected.
+          extractFrom = "_Path_" [required] - From every column defined, including the internal defined with "_..._", allow string.Empty
 -->
 <Document templatePath="c:\template.xlsx" baselinePath="c:\mjm.xlsx" backup="true" outputPath="c:\mjm.xlsx">
     <Sheets>
         <Sheet name="高清电影" enabled="true" mode="append" maxRowCount="600" refMode="false">
             <Formatters>
-                <Formatter enabled="true" name="append_formatter" extractFrom="" ruleType="AppendedItemFormatter" rule="" formatString="back-color:red;font-bold;font-italic"></Formatter>
+                <Formatter enabled="true" name="append_formatter" extractFrom="" ruleType="AppendedItemFormatter" rule="" formatString="fore-color:darkgreen;font-bold;font-italic"></Formatter>
                 <Formatter enabled="false" name="update_formatter" extractFrom="" ruleType="UpdatedItemFormatter" rule="" formatString="back-color:darkblue;fore-color:yellow"></Formatter>
                 <Formatter enabled="false" name="refresh_formatter" extractFrom="" ruleType="RefreshedItemFormatter" rule="" formatString="fore-color:red"></Formatter>
                 <Formatter enabled="false" name="duplicated_formatter" extractFrom="中文名" ruleType="DuplicatedItemFormatter" rule="" formatString="back-color:green;fore-color:pink"></Formatter>
@@ -37,8 +114,10 @@
             </Locations>
             <Columns>
                 <Column name="序号"   extractFrom="_AutoIncrease_" ruleType="" rule="" ></Column>
-                <Column name="全部"   extractFrom="_Path_"     ruleType="RegularExpressionRuleProcessor"     primary="true"  rule="pattern:=(?&lt;=\\)[^\\]*(?=$)" ></Column>
-                <Column name="中文名" extractFrom="全部"     ruleType="RegularExpressionRuleProcessor" rule="pattern:=(?&lt;=^|\])[\u4e00-\u9fa5\w][^\[\]\\]*?(?=[\.\[]|$)" ></Column>
+
+              <Column name="全部"   extractFrom="_Path_"     ruleType="RegularExpressionRuleProcessor"     primary="true"  rule="pattern:=(?&lt;=\\)[^\\]*(?=$)" ></Column>
+              <Column name="地址"   hyperlink="true" extractFrom="_Path_"     ruleType="DefaultRuleProcessor" rule="" ></Column>
+              <Column name="中文名" extractFrom="全部"     ruleType="RegularExpressionRuleProcessor" rule="pattern:=(?&lt;=^|\])[\u4e00-\u9fa5\w][^\[\]\\]*?(?=[\.\[]|$)" ></Column>
                 <Column name="英文名" extractFrom="全部"     ruleType="RegularExpressionRuleProcessor" rule="pattern:=(?&lt;=\.)[^\u4e00-\u9fa5]*?(?=\.[12][980]\d{2})" ></Column>
                 <Column name="文件类型" extractFrom="_FilesType_" ruleType="FilesTypeRuleProcessor" rule="exclude:=.jpg,.txt,.png,.nfo;include:=" ></Column>
                 <Column name="位置"   extractFrom="_Path_"     ruleType="DriverLabelRuleProcessor" rule="" ></Column>

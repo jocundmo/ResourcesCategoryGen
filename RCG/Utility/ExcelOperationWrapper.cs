@@ -111,6 +111,14 @@ namespace RCG
                Type.Missing);
             fd.Font.Strikethrough = flag;
         }
+        public static void SetHyperlink(dynamic sheet, int rowIndex, int colIndex)
+        {
+            //Excel.Range range = sheet.Range(string.Format("{0}:{0}", rowIndex));
+            //range = sheet.Range["A1"];
+            Excel.Range range = sheet.Range[string.Format("{0}{1}", Utility.IntToMoreChar(colIndex), rowIndex)];
+            string v = sheet.Cells[rowIndex, colIndex].Value;
+            sheet.Hyperlinks.Add(range, v);
+        }
         public static dynamic FindExcelActiveSheet(Excel.Application excel, string sheetName)
         {
             dynamic activeSheet = FindExcelSheet(excel, sheetName);

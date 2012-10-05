@@ -107,7 +107,8 @@ namespace RCG
                     bool columnPrimary = ConfigDoc.ConvertToBoolean(Utility.GetAttributeValue(xeColumn, "primary", "false"));
                     bool columnTimestamp = ConfigDoc.ConvertToBoolean(Utility.GetAttributeValue(xeColumn, "timestamp", "false"));
                     bool columnOutput = ConfigDoc.ConvertToBoolean(Utility.GetAttributeValue(xeColumn, "output", "true"));
-                    sheet.Columns.Add(new ColumnConfig(columnName, columnName, extractFrom, ruleType, rule, columnEnabled, columnPrimary, columnTimestamp, columnOutput));
+                    bool columnHyperlink = ConfigDoc.ConvertToBoolean(Utility.GetAttributeValue(xeColumn, "hyperlink", "false"));
+                    sheet.Columns.Add(new ColumnConfig(columnName, columnName, extractFrom, ruleType, rule, columnEnabled, columnPrimary, columnTimestamp, columnOutput, columnHyperlink));
                 }
 
                 // Raad [Filters > Filter]

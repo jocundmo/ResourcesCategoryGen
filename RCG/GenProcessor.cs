@@ -156,6 +156,8 @@ namespace RCG
                 dt.Columns.Add(dcTimestampColumnIndex);
                 DataColumn dcOutputColumnIndex = new DataColumn(Constants.COLUMN_OutputColumnIndex, typeof(string));
                 dt.Columns.Add(dcOutputColumnIndex);
+                DataColumn dcHyperlinkColumnIndex = new DataColumn(Constants.COLUMN_HyperlinkColumnIndex, typeof(string));
+                dt.Columns.Add(dcHyperlinkColumnIndex);
                 DataColumn dcAutoIncreaseColumnIndex = new DataColumn(Constants.COLUMN_AutoIncreaseColumnIndex, typeof(string));
                 dt.Columns.Add(dcAutoIncreaseColumnIndex);
                 DataColumn dcLocationFrom = new DataColumn(Constants.COLUMN_LocationFrom, typeof(string));
@@ -679,6 +681,8 @@ namespace RCG
                 metadataRow[Constants.COLUMN_TimestampColumnIndex] = columnIndex;
             if (columnConfig.Output)
                 metadataRow[Constants.COLUMN_OutputColumnIndex] += string.Format("{0},", columnIndex);
+            if (columnConfig.Hyperlink)
+                metadataRow[Constants.COLUMN_HyperlinkColumnIndex] += string.Format("{0},", columnIndex);
             if (columnConfig.ExtractFrom == Constants.PREDEFINED_AutoIncrease)
                 metadataRow[Constants.COLUMN_AutoIncreaseColumnIndex] += string.Format("{0},", columnIndex);
         }
@@ -1076,6 +1080,13 @@ namespace RCG
 
                 excelColIndex++;
                 activeSheet.Cells[realExcelRowIndex, excelColIndex] = row[col.ColumnName].ToString();
+
+                string[] columnsAreHyperlink = ((string)row[Constants.COLUMN_HyperlinkColumnIndex]).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (string s in columnsAreHyperlink)
+                {
+                    if (s.Trim() == loopColIndex.ToString())
+                        ExcelOperationWrapper.SetHyperlink(activeSheet, realExcelRowIndex, excelColIndex);
+                }
             }
 
             return true;

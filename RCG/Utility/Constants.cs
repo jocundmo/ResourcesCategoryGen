@@ -27,6 +27,7 @@ namespace RCG
         public const string COLUMN_PrimaryColumnIndex = "_*PrimaryColumnIndex*_";
         public const string COLUMN_TimestampColumnIndex = "_*TimestampColumnIndex*_";
         public const string COLUMN_OutputColumnIndex = "_*OutputColumnIndex*_";
+        public const string COLUMN_HyperlinkColumnIndex = "_*HyperlinkColumnIndex*_";
         public const string COLUMN_AutoIncreaseColumnIndex = "_*AutoIncreaseColumnIndex*_";
         public const string COLUMN_LocationFrom = "_*LocationFrom*_";
 
@@ -45,6 +46,7 @@ namespace RCG
         public const string FORMATTER_Internal_AppendedItem = "_static.appended_";
         public const string FORMATTER_Internal_DeletedItem = "_static.deleted_";
         public const string FORMATTER_Internal_UpdatedItem = "_static.updated_";
+
     }
 
     public enum LocationType
