@@ -316,7 +316,7 @@ namespace RCG
         {
             try
             {
-                return Directory.Exists(path);
+                return Directory.Exists(Utility.ConvertVolumeLabelPathToPhysicalPath(path));
             }
             catch (IOException)
             {
