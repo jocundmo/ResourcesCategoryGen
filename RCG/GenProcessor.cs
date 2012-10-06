@@ -167,13 +167,13 @@ namespace RCG
                 // Read metadata.
                 foreach (LocationConfig locationConfig in sheetConfig.Locations)
                 {
-                    if (!locationConfig.Enabled)
-                        continue;
+                    if (!locationConfig.Enabled) continue;
+                    if (!Utility.IsLocationAccessable(locationConfig.Path)) continue;
                     try
                     {
                         ReadMetadata(locationConfig, dt);
                     }
-                    catch (IOException ex)
+                    catch (IOException ex) // This is redundant since the "IsLocationAccessable" method added. 
                     {
                         if (OnHandlableException != null)
                             OnHandlableException(this, new HandlableExceptionEventArgs(ex, string.Format("Location {0} does not exist...", locationConfig.Path)));
@@ -508,12 +508,12 @@ namespace RCG
                 int autoIncreaseNumber = 0;
 
                 // Check deleted status ==>
-                foreach (DataRow dr in _excelSet.Tables[sheetConfig.Name].Rows)
+                foreach (LocationConfig locationConfig in sheetConfig.Locations)
                 {
-                    foreach (LocationConfig locationConfig in sheetConfig.Locations)
+                    if (!locationConfig.Enabled) continue;
+                    if (!Utility.IsLocationAccessable(locationConfig.Path)) continue;
+                    foreach (DataRow dr in _excelSet.Tables[sheetConfig.Name].Rows)
                     {
-                        if (!locationConfig.Enabled) continue;
-
                         if (string.Compare((string)dr[Constants.COLUMN_LocationFrom], locationConfig.Name.Trim(), true) == 0)
                         {
                             if (!_metadataPrimaryColumnList.Contains((string)dr[Constants.COLUMN_Path]))

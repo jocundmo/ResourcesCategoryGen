@@ -311,5 +311,17 @@ namespace RCG
 
             return rtn;
         }
+
+        internal static bool IsLocationAccessable(string path)
+        {
+            try
+            {
+                return Directory.Exists(path);
+            }
+            catch (IOException)
+            {
+                return false;
+            }
+        }
     }
 }

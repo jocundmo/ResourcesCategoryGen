@@ -23,7 +23,7 @@
         [Sheets] - The container for all sheets, only has one.
         
         [Sheet name="{string}" enabled="{true/false}" mode="{refresh/append}" maxRowCount="{int}" refMode="{true/false}"]
-          name = "高清电影" [required]
+          name = "高清电影" [required][identicial]
           enabled = "true" [optional default="true"]
           mode = "refresh" [optional default="refresh"]
           maxRowCount = "600" [optional default="3000"]
@@ -64,7 +64,7 @@
         [Locations]
         
         [Location name="{string}" enabled="{true/false}" path="{string:path*}" include="{string:include*}"]
-          name = "location_name" [optional] - not used actually, just a name.
+          name = "location_name" [required][identicial] - used to identify whether a resource is really deleted or just moved away temporary like hard drive unplug.
           enabled = "true" [optional default="true"]
           path = "\\mainframe1601\640G_02\HD.Movies" [required] - *NetworkVolume e.g. \\mainframe1601\640G_02\HD.Movies
                                                                   *IPLocation e.g. \\192.168.2.165\高清电影02
@@ -110,7 +110,7 @@
                 <Location enabled="false" path="\\192.168.2.165\高清电影02" include="*.mp3"></Location>
                 <Location enabled="false" path="\\192.168.2.165\高清电影04"></Location>
                 <Location name="Test1" enabled="true" path="C:\New Folder" include="folder"></Location>
-                <Location name="Test2" enabled="false" path="C:\New Folder2" include="folder"></Location>
+                <Location name="Test2" enabled="true" path="C:\New Folder2" include="folder"></Location>
             </Locations>
             <Columns>
                 <Column name="序号"   extractFrom="_AutoIncrease_" ruleType="" rule="" ></Column>
