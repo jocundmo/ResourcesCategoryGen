@@ -168,7 +168,12 @@ namespace RCG
                 foreach (LocationConfig locationConfig in sheetConfig.Locations)
                 {
                     if (!locationConfig.Enabled) continue;
-                    if (!Utility.IsLocationAccessable(locationConfig.Path)) continue;
+                    if (!Utility.IsLocationAccessable(locationConfig.Path))
+                    {
+                        if (OnGeneralMessageException != null)
+                            OnGeneralMessageException(this, new GeneralMessageEventArgs(string.Format("Location {0} is not accessible...", locationConfig.Path)));
+                        continue;
+                    }
                     try
                     {
                         ReadMetadata(locationConfig, dt);
@@ -1096,6 +1101,8 @@ namespace RCG
 
         #region Events
 
+        public event EventHandler<GeneralMessageEventArgs> OnGeneralMessageException;
+
         public event EventHandler<HandlableExceptionEventArgs> OnHandlableException;
 
         public event EventHandler<DataRowEventArgs> OnReadingMetadata;
@@ -1115,6 +1122,15 @@ namespace RCG
         #endregion
 
         
+    }
+
+    public class GeneralMessageEventArgs : EventArgs
+    {
+        public string Message { get; private set; }
+        public GeneralMessageEventArgs(string message)
+        {
+            this.Message = message;
+        }
     }
 
     public class HandlableExceptionEventArgs : EventArgs

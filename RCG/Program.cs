@@ -89,6 +89,7 @@ namespace RCG
             }
 
             GenProcessor gp = new GenProcessor();
+            gp.OnGeneralMessageException += new EventHandler<GeneralMessageEventArgs>(gp_OnGeneralMessageException);
             gp.OnHandlableException += new EventHandler<HandlableExceptionEventArgs>(gp_OnHandlableException);
             gp.OnReadingMetadata += new EventHandler<DataRowEventArgs>(gp_OnReadingMetadata);
             gp.OnReadingExcelRow += new EventHandler<DataRowEventArgs>(gp_OnReadingExcelRow);
@@ -155,6 +156,12 @@ namespace RCG
             //#endregion
 
 
+        }
+
+        static void gp_OnGeneralMessageException(object sender, GeneralMessageEventArgs e)
+        {
+            string message = e.Message;
+            logger.LogMessage(message);
         }
 
         static void gp_OnHandlableException(object sender, HandlableExceptionEventArgs e)
