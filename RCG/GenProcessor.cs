@@ -174,15 +174,15 @@ namespace RCG
                             OnGeneralMessageException(this, new GeneralMessageEventArgs(string.Format("Location {0} is not accessible...", locationConfig.Path)));
                         continue;
                     }
-                    try
-                    {
-                        ReadMetadata(locationConfig, dt);
-                    }
-                    catch (IOException ex) // This is redundant since the "IsLocationAccessable" method added. 
-                    {
-                        if (OnHandlableException != null)
-                            OnHandlableException(this, new HandlableExceptionEventArgs(ex, string.Format("Location {0} does not exist...", locationConfig.Path)));
-                    }
+                    //try
+                    //{
+                    ReadMetadata(locationConfig, dt);
+                    //}
+                    //catch (IOException ex) // This is redundant since the "IsLocationAccessable" method added. 
+                    //{
+                    //    if (OnHandlableException != null)
+                    //        OnHandlableException(this, new HandlableExceptionEventArgs(ex, string.Format("Error when reading metadata", locationConfig.Path)));
+                    //}
                 }
 
                 _metadataSet.Tables.Add(dt);
@@ -230,61 +230,74 @@ namespace RCG
             // Read metadata
             foreach (string dir in dirList)
             {
-                DirectoryInfo d = new DirectoryInfo(dir);
-                DataRow dr = dt.NewRow();
-                dr[Constants.COLUMN_Path] = dir;
-                dr[Constants.COLUMN_LastModified] = d.LastWriteTime.ToString();
-                dr[Constants.COLUMN_Attributes] = d.Attributes.ToString();
-                dr[Constants.COLUMN_LocationFrom] = locationConfig.Name;
-
-                long size = 0;
-                int fileCount = 0;
-                int subFolderCount = 0;
-                string filesType = string.Empty;
                 try
                 {
-                    Utility.CalFolderSize(ref size, ref fileCount, ref subFolderCount, ref filesType, d);
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    size = -1;
-                    fileCount = -1;
-                    subFolderCount = -1;
-                    filesType = "Access Denied";
-                }
-                dr[Constants.COLUMN_FilesType] = filesType;
-                dr[Constants.COLUMN_Size] = size.ToString();
-                dr[Constants.COLUMN_FileCount] = fileCount.ToString();
-                dr[Constants.COLUMN_SubFolderCount] = subFolderCount.ToString();
+                    DirectoryInfo d = new DirectoryInfo(dir);
+                    DataRow dr = dt.NewRow();
+                    dr[Constants.COLUMN_Path] = dir;
+                    dr[Constants.COLUMN_LastModified] = d.LastWriteTime.ToString();
+                    dr[Constants.COLUMN_Attributes] = d.Attributes.ToString();
+                    dr[Constants.COLUMN_LocationFrom] = locationConfig.Name;
 
-                string fileContent = string.Empty;
-                if (File.Exists(dir + FROM_FILE_NAME))
-                {
-                    using (StreamReader sr = new StreamReader(dir + FROM_FILE_NAME, Encoding.Default))
+                    long size = 0;
+                    int fileCount = 0;
+                    int subFolderCount = 0;
+                    string filesType = string.Empty;
+                    try
                     {
-                        fileContent = sr.ReadToEnd();
+                        Utility.CalFolderSize(ref size, ref fileCount, ref subFolderCount, ref filesType, d);
                     }
+                    catch (UnauthorizedAccessException)
+                    {
+                        size = -1;
+                        fileCount = -1;
+                        subFolderCount = -1;
+                        filesType = "Access Denied";
+                    }
+                    dr[Constants.COLUMN_FilesType] = filesType;
+                    dr[Constants.COLUMN_Size] = size.ToString();
+                    dr[Constants.COLUMN_FileCount] = fileCount.ToString();
+                    dr[Constants.COLUMN_SubFolderCount] = subFolderCount.ToString();
+
+                    string fileContent = string.Empty;
+                    if (File.Exists(dir + FROM_FILE_NAME))
+                    {
+                        using (StreamReader sr = new StreamReader(dir + FROM_FILE_NAME, Encoding.Default))
+                        {
+                            fileContent = sr.ReadToEnd();
+                        }
+                    }
+                    dr[Constants.COLUMN_FromFile] = fileContent;
+
+                    if (OnReadingMetadata != null)
+                        OnReadingMetadata(this, new DataRowEventArgs(dr, dir));
+
+                    // Append to list here is added for new check deleted item function. ==>
+                    int columnIndex = -1;
+                    foreach (DataColumn dc in dt.Columns)
+                    {
+                        columnIndex++;
+                        if (Utility.IsExtractFromMetadata(dc.ColumnName)) // The column with pattern "_..._" is invisible to user, so all the special columns should be intened to actual columns. So we skip the pattern "_..._" here.
+                            continue;
+                        ColumnConfig columnConfig = FindColumnConfig(_config, dt.TableName, dc.ColumnName);
+                        SetSpecialColumnIndex(columnConfig, columnIndex, dr);
+                    }
+
+                    dt.Rows.Add(dr);
+
+                    AppendToList(dr, _metadataPrimaryColumnList);
+                    // <==
                 }
-                dr[Constants.COLUMN_FromFile] = fileContent;
-
-                if (OnReadingMetadata != null)
-                    OnReadingMetadata(this, new DataRowEventArgs(dr, dir));
-
-                // Append to list here is added for new check deleted item function. ==>
-                int columnIndex = -1;
-                foreach (DataColumn dc in dt.Columns)
+                catch (IOException ex)
                 {
-                    columnIndex++;
-                    if (Utility.IsExtractFromMetadata(dc.ColumnName)) // The column with pattern "_..._" is invisible to user, so all the special columns should be intened to actual columns. So we skip the pattern "_..._" here.
-                        continue;
-                    ColumnConfig columnConfig = FindColumnConfig(_config, dt.TableName, dc.ColumnName);
-                    SetSpecialColumnIndex(columnConfig, columnIndex, dr);
+                    if (OnHandlableException != null)
+                        OnHandlableException(this, new HandlableExceptionEventArgs(ex, 
+                            string.Format("Error when reading metadata... {0}", dir) + 
+                            Environment.NewLine + 
+                            ex.ToString() +
+                            "Press any key to continue..."));
+                    Console.Read();
                 }
-
-                dt.Rows.Add(dr);
-
-                AppendToList(dr, _metadataPrimaryColumnList);
-                // <==
             }
         }
 

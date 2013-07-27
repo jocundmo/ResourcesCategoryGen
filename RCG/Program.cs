@@ -167,6 +167,9 @@ namespace RCG
         static void gp_OnHandlableException(object sender, HandlableExceptionEventArgs e)
         {
             string message = string.IsNullOrEmpty(e.KeyMessage) ? e.HandlableException.ToString() : e.KeyMessage;
+            //string message = e.KeyMessage;
+            //message += Environment.NewLine;
+            //message += e.HandlableException.ToString();
             logger.LogMessage("Exception is handled: " + message);
         }
 
